@@ -1,4 +1,4 @@
-const BASE_URL = 'https://v2-api.clashk.ing/v2';
+const BASE_URL = 'https://api.clashk.ing/v2';
 
 /**
  * ck (ClashKing fetch helper)

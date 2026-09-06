@@ -35,7 +35,7 @@ export default function GlobalStatRail() {
     30000
   );
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <div className="grid grid-cols-1 divide-y divide-slate-800">
         {Array.from({ length: 2 }).map((_, i) => (
