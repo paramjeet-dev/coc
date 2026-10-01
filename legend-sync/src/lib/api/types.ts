@@ -63,3 +63,73 @@ export type ApiErrorBody = {
   request_id?: string;
   details?: Array<{ field: string; message: string }>;
 };
+
+/* ---------- Player and Legend League ---------- */
+
+export type LegendSeriesDay = {
+  day: string;
+  attackTrophies: number;
+  defenseTrophies: number;
+  trophies: number;
+};
+
+export type LegendSeasonRecord = {
+  season: string;
+  tag: string;
+  name: string;
+  expLevel: Num;
+  trophies: Num;
+  attackWins: Num;
+  defenseWins: Num;
+  rank: Num;
+  clan?: {
+    tag?: string;
+    name?: string;
+    badgeUrls?: { small?: string; medium?: string; large?: string };
+  };
+  leagueTier?: { id: Num; name?: string };
+};
+
+export type PlayerRankings = {
+  tag: string;
+  homeVillage?: { trophies?: Num | null; globalRank?: Num | null; localRank?: Num | null };
+  builderBase?: { trophies?: Num | null; globalRank?: Num | null; localRank?: Num | null };
+  location?: { id: Num; name?: string; isCountry: boolean; countryCode?: string };
+};
+
+export type SeasonBounds = { season_start: string; season_end: string };
+
+export type BattleHistoryItem = {
+  battleMode: "farming" | "ranked" | "legend";
+  battleTime: string;
+  stars: number;
+  destructionPercentage: Num;
+  duration: number;
+  lootedResources: { gold: number; elixir: number; darkElixir: number };
+  shareCode: string | null;
+  familyId: DecimalId | null;
+};
+
+export type LegendBattle = {
+  time: string;
+  townHallLevel: number;
+  opponent: { tag: string; name: string; townHallLevel: number };
+  stars: number;
+  destructionPercentage: Num;
+  duration: number;
+  shareCode: string | null;
+  familyId: DecimalId | null;
+  trophies: number;
+};
+
+export type LegendDefenseEntry = LegendBattle | { trophies: number; automatic: true };
+
+export type LegendDayBattlelog = {
+  tag: string;
+  day: string;
+  attackTrophies: number;
+  defenseTrophies: number;
+  trophies: number;
+  attacks: LegendBattle[];
+  defenses: LegendDefenseEntry[];
+};

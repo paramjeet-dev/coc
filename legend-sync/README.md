@@ -23,8 +23,8 @@ npm run dev
 ```
 
 ## Phases
-0. Foundation (this drop): theme, shell, API client, tag utils, search, dashboard
-1. Player profile and Legends history
+0. Foundation: theme, shell, API client, tag utils, search, dashboard
+1. Player profile and Legends history (this drop)
 2. Player battle log
 3. Ranked season insights
 4. Meta armies
