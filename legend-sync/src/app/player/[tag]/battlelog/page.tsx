@@ -5,8 +5,7 @@ export default async function PlayerBattlelogPage({ params }: { params: Promise<
   return (
     <PhaseStub
       title={`Battle log for #${tag.toUpperCase()}`}
-      summary="Stored attacks across farming, ranked and Legend modes with army share codes."
-      endpoints={["GET /v2/player/{playerTag}/battlelog/history"]}
+      summary="Stored attacks across farming, ranked and Legend modes with army share codes. Coming in phase 2."
     />
   );
 }

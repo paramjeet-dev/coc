@@ -1,11 +1,19 @@
-import { apiGet } from "./client";
+import { dayCandidates, stripVersionPrefix } from "../legend";
+import { ApiError, apiGet } from "./client";
+import { tagToApi } from "./tags";
 import type {
+  BattleHistoryItem,
   ClanSearchHit,
   CurrentDates,
   GlobalCounts,
+  LegendDayBattlelog,
+  LegendSeasonRecord,
+  LegendSeriesDay,
   LegendTrophyBucket,
   Paginated,
+  PlayerRankings,
   PlayerSearchHit,
+  SeasonBounds,
 } from "./types";
 
 export const getGlobalCounts = () => apiGet<GlobalCounts>("/v2/counts", { revalidate: 120 });
@@ -30,18 +38,14 @@ export const searchClans = (query: string, limit = 8, signal?: AbortSignal) =>
   });
 
 /* ---------- Player and Legend League ---------- */
-import { tagToApi } from "./tags";
-import type {
-  BattleHistoryItem,
-  LegendDayBattlelog,
-  LegendSeasonRecord,
-  LegendSeriesDay,
-  PlayerRankings,
-  SeasonBounds,
-} from "./types";
 
-export const getSeasonBounds = () =>
-  apiGet<SeasonBounds>("/v2/dates/season-start-end", { revalidate: 3600 });
+export async function getSeasonBounds(): Promise<SeasonBounds> {
+  const bounds = await apiGet<SeasonBounds>("/v2/dates/season-start-end", { revalidate: 3600 });
+  return {
+    season_start: stripVersionPrefix(bounds.season_start),
+    season_end: stripVersionPrefix(bounds.season_end),
+  };
+}
 
 export const getLegendSeries = (tag: string, after?: string, before?: string) =>
   apiGet<{ tag: string; items: LegendSeriesDay[] }>(`/v2/player/${tagToApi(tag)}/legend/series`, {
@@ -54,11 +58,23 @@ export const getLegendHistory = (tag: string) =>
     revalidate: 600,
   });
 
-export const getLegendDayBattlelog = (tag: string, day: string) =>
-  apiGet<LegendDayBattlelog>(
-    `/v2/player/${tagToApi(tag)}/legend/${encodeURIComponent(day)}/battlelog`,
-    { revalidate: 120 },
-  );
+/** Tries the day in each known format, since the API's day identifier format has changed once already. */
+export async function getLegendDayBattlelog(tag: string, rawDay: string): Promise<LegendDayBattlelog> {
+  let lastError: unknown = new Error("No day identifier to try");
+  for (const candidate of dayCandidates(rawDay)) {
+    try {
+      return await apiGet<LegendDayBattlelog>(
+        `/v2/player/${tagToApi(tag)}/legend/${encodeURIComponent(candidate)}/battlelog`,
+        { revalidate: 120 },
+      );
+    } catch (error) {
+      lastError = error;
+      const retryable = error instanceof ApiError && [400, 404, 422].includes(error.status);
+      if (!retryable) throw error;
+    }
+  }
+  throw lastError;
+}
 
 export const getBattlelogHistory = (tag: string, after?: string, before?: string) =>
   apiGet<{ items: BattleHistoryItem[] }>(`/v2/player/${tagToApi(tag)}/battlelog/history`, {

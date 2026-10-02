@@ -7,13 +7,7 @@ export default function MetaPage() {
   return (
     <PhaseStub
       title="Meta armies"
-      summary="Army families ranked by usage and triple rate, filterable by cohort, heroes and equipment."
-      endpoints={[
-        "GET /v2/stats/armies",
-        "GET /v2/stats/armies/detail",
-        "GET /v2/stats/armies/timeline",
-        "GET /v2/stats/legend/days",
-      ]}
+      summary="Army families ranked by usage and triple rate, filterable by cohort, heroes and equipment. Coming in phase 4."
     />
   );
 }

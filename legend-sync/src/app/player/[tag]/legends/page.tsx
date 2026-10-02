@@ -11,17 +11,24 @@ import {
   getLegendDayBattlelog,
   getLegendHistory,
   getLegendSeries,
-  getSeasonBounds,
 } from "@/lib/api/endpoints";
 import { normalizeTag } from "@/lib/api/tags";
 import { formatPercent } from "@/lib/format";
-import { formatDuration, groupLegendAttacks, summarizeAttacks } from "@/lib/legend";
+import {
+  dayKey,
+  formatDuration,
+  groupLegendAttacks,
+  runningTotal,
+  summarizeAttacks,
+  trimInactive,
+} from "@/lib/legend";
 
 export const metadata: Metadata = { title: "Legends history" };
 
-function dayWindow(): { after: string } {
-  const after = new Date(Date.now() - 31 * 86_400_000);
-  return { after: after.toISOString() };
+const MS_DAY = 86_400_000;
+
+function signed(n: number): string {
+  return n > 0 ? `+${n}` : String(n);
 }
 
 export default async function PlayerLegendsPage({
@@ -34,17 +41,21 @@ export default async function PlayerLegendsPage({
   const { tag: slug } = await params;
   const { day } = await searchParams;
   const tag = normalizeTag(slug);
-
-  const bounds = await getSeasonBounds().catch(() => null);
-  const after = bounds?.season_start ?? dayWindow().after;
+  const after = new Date(Date.now() - 31 * MS_DAY).toISOString();
 
   const [series, history, battles] = await Promise.allSettled([
-    getLegendSeries(tag, after),
+    getLegendSeries(tag),
     getLegendHistory(tag),
     getBattlelogHistory(tag, after),
   ]);
 
-  const days = series.status === "fulfilled" ? [...series.value.items].sort((a, b) => a.day.localeCompare(b.day)) : [];
+  const allDays =
+    series.status === "fulfilled"
+      ? [...series.value.items].sort((a, b) => dayKey(a.day).localeCompare(dayKey(b.day)))
+      : [];
+  const days = trimInactive(allDays);
+  const keys = days.map((d) => dayKey(d.day));
+
   const seasons =
     history.status === "fulfilled"
       ? [...history.value.items].sort((a, b) => b.season.localeCompare(a.season))
@@ -53,9 +64,11 @@ export default async function PlayerLegendsPage({
 
   const attacksByDay = groupLegendAttacks(battleItems);
   const summary = summarizeAttacks(battleItems);
-  const selectedDay = day && days.some((d) => d.day === day) ? day : days[days.length - 1]?.day;
-  const dayLog = selectedDay
-    ? await getLegendDayBattlelog(tag, selectedDay).catch(() => null)
+
+  const selectedKey = day && keys.includes(day) ? day : keys[keys.length - 1];
+  const selectedRaw = days.find((d) => dayKey(d.day) === selectedKey)?.day;
+  const dayLog = selectedRaw
+    ? await getLegendDayBattlelog(tag, selectedRaw).catch(() => null)
     : null;
 
   const basePath = `/player/${slug.toUpperCase().replace(/^#/, "")}/legends`;
@@ -72,82 +85,86 @@ export default async function PlayerLegendsPage({
     );
   }
 
-  const tide = days.map((d) => ({ day: d.day, trophies: d.trophies }));
+  const tide = runningTotal(days);
   const net = days.map((d) => ({
-    day: d.day,
+    day: dayKey(d.day),
     attack: Math.abs(d.attackTrophies),
     defense: -Math.abs(d.defenseTrophies),
   }));
-  const firstDay = days[0];
-  const lastDay = days[days.length - 1];
-  const seasonNet = firstDay && lastDay ? lastDay.trophies - firstDay.trophies : null;
+  const netTotal = days.reduce((sum, d) => sum + d.trophies, 0);
 
   return (
     <div className="grid gap-5 lg:grid-cols-12">
-      <Panel
-        title="This season's tide"
-        description="Trophies at the end of each Legend day."
-        className="rounded-panel p-6 sm:p-8 lg:col-span-8"
-      >
-        {tide.length > 1 ? (
-          <TrophyTideChart data={tide} />
-        ) : (
-          <p className="text-sm text-ink-300">Two Legend days are needed to draw the tide.</p>
-        )}
-      </Panel>
+      {days.length > 0 && (
+        <>
+          <Panel
+            title="Recent tide"
+            description="Running net trophies across your recent Legend days."
+            className="rounded-panel p-6 sm:p-8 lg:col-span-8"
+          >
+            {tide.length > 1 ? (
+              <TrophyTideChart data={tide} />
+            ) : (
+              <p className="text-sm text-ink-300">Two Legend days are needed to draw the tide.</p>
+            )}
+          </Panel>
 
-      <Panel title="Season form" className="rounded-tile p-6 lg:col-span-4 lg:self-start">
-        <dl className="divide-y divide-ink-800">
-          {[
-            ["Net trophies", seasonNet === null ? "n/a" : seasonNet > 0 ? `+${seasonNet}` : String(seasonNet)],
-            ["Attacks tracked", String(summary.attacks)],
-            ["Triple rate", formatPercent(summary.tripleRate)],
-            ["No star rate", formatPercent(summary.zeroRate)],
-            ["Average destruction", formatPercent(summary.averageDestruction)],
-            ["Average attack time", formatDuration(summary.averageDuration)],
-          ].map(([label, value], i) => (
-            <div key={label} className="flex items-baseline justify-between py-2.5">
-              <dt className="text-sm text-ink-300">{label}</dt>
-              <dd className={`font-mono tabular-nums ${i === 0 ? "text-xl font-semibold text-gold-300" : "text-base"}`}>
-                {value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Panel>
+          <Panel title="Recent form" className="rounded-tile p-6 lg:col-span-4 lg:self-start">
+            <dl className="divide-y divide-ink-800">
+              {[
+                ["Net trophies", signed(netTotal)],
+                ["Legend days", String(days.length)],
+                ["Attacks tracked", String(summary.attacks)],
+                ["Triple rate", formatPercent(summary.tripleRate)],
+                ["No star rate", formatPercent(summary.zeroRate)],
+                ["Average destruction", formatPercent(summary.averageDestruction)],
+                ["Average attack time", formatDuration(summary.averageDuration)],
+              ].map(([label, value], i) => (
+                <div key={label} className="flex items-baseline justify-between py-2.5">
+                  <dt className="text-sm text-ink-300">{label}</dt>
+                  <dd
+                    className={`font-mono tabular-nums ${
+                      i === 0 ? "text-xl font-semibold text-gold-300" : "text-base"
+                    }`}
+                  >
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </Panel>
 
-      <Panel
-        title="Attack strip"
-        description="One column per day, one dot per attack. Pick a day to inspect it."
-        className="rounded-3xl p-6 sm:p-8 lg:col-span-7"
-      >
-        <AttackStrip
-          days={days.map((d) => d.day)}
-          attacksByDay={attacksByDay}
-          selectedDay={selectedDay}
-          basePath={basePath}
-        />
-      </Panel>
+          <Panel
+            title="Attack strip"
+            description="One column per day, one dot per attack. Pick a day to inspect it."
+            className="rounded-3xl p-6 sm:p-8 lg:col-span-7"
+          >
+            <AttackStrip
+              days={keys}
+              attacksByDay={attacksByDay}
+              selectedDay={selectedKey}
+              basePath={basePath}
+            />
+          </Panel>
 
-      <Panel
-        title="Gains against losses"
-        description="Trophies won attacking, trophies lost defending."
-        className="rounded-2xl p-6 lg:col-span-5"
-      >
-        {net.length > 0 && <AttackDefenseChart data={net} />}
-      </Panel>
+          <Panel
+            title="Gains against losses"
+            description="Trophies won attacking, trophies lost defending."
+            className="rounded-2xl p-6 lg:col-span-5"
+          >
+            <AttackDefenseChart data={net} />
+          </Panel>
 
-      {selectedDay && (
-        <Panel
-          title={`Day ${selectedDay}`}
-          className="rounded-3xl p-6 sm:p-8 lg:col-span-12"
-        >
-          {dayLog ? (
-            <DayInspector log={dayLog} />
-          ) : (
-            <p className="text-sm text-ink-300">Battle details for this day could not be loaded.</p>
+          {selectedKey && (
+            <Panel title={`Day ${selectedKey}`} className="rounded-3xl p-6 sm:p-8 lg:col-span-12">
+              {dayLog ? (
+                <DayInspector log={dayLog} />
+              ) : (
+                <p className="text-sm text-ink-300">Battle details for this day could not be loaded.</p>
+              )}
+            </Panel>
           )}
-        </Panel>
+        </>
       )}
 
       {seasons.length > 0 && (

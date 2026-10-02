@@ -13,7 +13,7 @@ import { shortDay } from "@/lib/legend";
 type Point = { day: string; trophies: number };
 
 const config = {
-  trophies: { label: "Trophies", color: palette.gold },
+  trophies: { label: "Net trophies", color: palette.gold },
 } satisfies ChartConfig;
 
 export function TrophyTideChart({ data }: { data: Point[] }) {
@@ -37,7 +37,7 @@ export function TrophyTideChart({ data }: { data: Point[] }) {
           stroke={palette.axis}
         />
         <YAxis
-          domain={["dataMin - 40", "dataMax + 40"]}
+          domain={["dataMin - 25", "dataMax + 25"]}
           tickLine={false}
           axisLine={false}
           width={48}

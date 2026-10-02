@@ -7,8 +7,7 @@ export default function ClansPage() {
   return (
     <PhaseStub
       title="Clans"
-      summary="Search a clan to open its Legend summary, season finishes and war record."
-      endpoints={["GET /v2/clan/search", "GET /v2/clan/{tag}/cached"]}
+      summary="Search a clan to open its Legend summary, season finishes and war record. Coming in phase 5."
     />
   );
 }

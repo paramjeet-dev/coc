@@ -1,4 +1,4 @@
-import { toNum, type BattleHistoryItem } from "./api/types";
+import { toNum, type BattleHistoryItem, type LegendSeriesDay } from "./api/types";
 
 /** Accepts ISO strings and the compact Clash format 20261001T120000.000Z. */
 export function parseBattleTime(value: string): Date {
@@ -65,4 +65,46 @@ export function formatDuration(seconds: number | null): string {
 export function shortDay(day: string): string {
   const [, month, date] = day.split("-");
   return month && date ? `${Number(month)}/${Number(date)}` : day;
+}
+
+/**
+ * Day identifiers arrive as "2026-09-21" (old) or "v2-2026-09-21T05:00:00Z" (new).
+ * The canonical key is always the plain date, which is what we show and group by.
+ */
+export function dayKey(raw: string): string {
+  const match = /\d{4}-\d{2}-\d{2}/.exec(raw);
+  return match ? match[0] : raw;
+}
+
+/** Drops a leading "v2-" style version prefix from a timestamp. */
+export function stripVersionPrefix(raw: string): string {
+  return raw.replace(/^v\d+-/, "");
+}
+
+/** Human friendly form of an event date in either format. */
+export function displayDate(raw: string): string {
+  const clean = stripVersionPrefix(raw);
+  const match = /^(\d{4}-\d{2}-\d{2})T/.exec(clean);
+  return match?.[1] ?? clean;
+}
+
+/** Identifiers to try, in order, when an endpoint wants a day. The first is whatever the API gave us. */
+export function dayCandidates(raw: string): string[] {
+  const key = dayKey(raw);
+  return Array.from(new Set([raw, `v2-${key}T05:00:00Z`, key]));
+}
+
+/** The series is padded with zero rows from before the player reached Legend. Drop the leading ones. */
+export function trimInactive(days: LegendSeriesDay[]): LegendSeriesDay[] {
+  const first = days.findIndex((d) => d.attackTrophies !== 0 || d.defenseTrophies !== 0);
+  return first === -1 ? [] : days.slice(first);
+}
+
+/** Each row's `trophies` is that day's net change, so the tide is a running total. */
+export function runningTotal(days: LegendSeriesDay[]): Array<{ day: string; trophies: number }> {
+  let total = 0;
+  return days.map((d) => {
+    total += d.trophies;
+    return { day: dayKey(d.day), trophies: total };
+  });
 }
