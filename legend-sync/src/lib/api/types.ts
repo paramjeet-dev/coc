@@ -133,3 +133,93 @@ export type LegendDayBattlelog = {
   attacks: LegendBattle[];
   defenses: LegendDefenseEntry[];
 };
+
+/* ---------- Ranked seasons ---------- */
+
+export type RankedSeasonRecord = {
+  mode: "ranked";
+  seasonId: string;
+  leagueGroupId: string;
+  league: { id: number; name: string };
+  maxBattles: number;
+  tag: string;
+  name: string;
+  townHallLevel: number | null;
+  attackLosses: number;
+  attackStars: number;
+  attackWins: number;
+  defenseLosses: number;
+  defenseStars: number;
+  defenseWins: number;
+  leagueTrophies: number;
+  placement: number;
+};
+
+export type LegendSeasonSummary = {
+  mode: "legend";
+  season: string;
+  league: { id: number; name: string } | null;
+  trophies: number;
+  attackWins: number;
+  defenseWins: number;
+  rank: number;
+};
+
+export type LeagueHistoryItem = RankedSeasonRecord | LegendSeasonSummary;
+
+export type RankedBattlelog = {
+  tag: string;
+  seasonId: string;
+  leagueGroupId: string;
+  league: { id: number; name: string };
+  maxBattles: number;
+  registeredAttacks: number;
+  registeredDefenses: number;
+  attackTrophies: number;
+  defenseTrophies: number;
+  trophies: number;
+  attacks: LegendBattle[];
+  defenses: LegendDefenseEntry[];
+};
+
+export type RankedGroupMember = {
+  tag: string;
+  name: string;
+  townHallLevel: number | null;
+  attackLosses: number;
+  attackStars: number;
+  attackWins: number;
+  defenseLosses: number;
+  defenseStars: number;
+  defenseWins: number;
+  leagueTrophies: number;
+  placement: number;
+};
+
+export type RankedLeagueGroup = {
+  leagueGroupId: string;
+  seasonId: string;
+  league: { id: number; name: string };
+  maxBattles: number;
+  members: RankedGroupMember[];
+};
+
+export type LeagueTierStatistics = {
+  seasonId: string;
+  league: { id: number; name: string };
+  groupCount: number;
+  playerCount: number;
+  participatingPlayers: number;
+  trophyPercentiles: {
+    p10: number | null;
+    p25: number | null;
+    p50: number | null;
+    p75: number | null;
+    p90: number | null;
+  };
+  townHallDistribution: Array<{ level: number; count: number }>;
+  groupCompetitiveness: {
+    averageTrophyRange: Num | null;
+    averageFirstPlaceGap: Num | null;
+  };
+};

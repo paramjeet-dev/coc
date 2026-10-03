@@ -8,11 +8,15 @@ import type {
   GlobalCounts,
   LegendDayBattlelog,
   LegendSeasonRecord,
+  LeagueHistoryItem,
+  LeagueTierStatistics,
   LegendSeriesDay,
   LegendTrophyBucket,
   Paginated,
   PlayerRankings,
   PlayerSearchHit,
+  RankedBattlelog,
+  RankedLeagueGroup,
   SeasonBounds,
 } from "./types";
 
@@ -84,3 +88,28 @@ export const getBattlelogHistory = (tag: string, after?: string, before?: string
 
 export const getPlayerRankings = (tag: string) =>
   apiGet<PlayerRankings>(`/v2/player/${tagToApi(tag)}/rankings`, { revalidate: 300 });
+
+/* ---------- Ranked seasons ---------- */
+
+export const getLeagueHistory = (tag: string) =>
+  apiGet<{ items: LeagueHistoryItem[] }>(`/v2/player/${tagToApi(tag)}/league/history`, {
+    revalidate: 300,
+  });
+
+export const getRankedBattlelog = (tag: string, seasonId: string) =>
+  apiGet<RankedBattlelog>(
+    `/v2/player/${tagToApi(tag)}/ranked/${encodeURIComponent(seasonId)}/battlelog`,
+    { revalidate: 300 },
+  );
+
+export const getRankedGroup = (seasonId: string, leagueGroupId: string) =>
+  apiGet<RankedLeagueGroup>(
+    `/v2/ranked/${encodeURIComponent(seasonId)}/groups/${encodeURIComponent(leagueGroupId)}`,
+    { revalidate: 600 },
+  );
+
+export const getLeagueTierStatistics = (seasonId: string, leagueTierId: number) =>
+  apiGet<LeagueTierStatistics>(
+    `/v2/stats/league/tournaments/${encodeURIComponent(seasonId)}/tiers/${leagueTierId}`,
+    { revalidate: 900 },
+  );
