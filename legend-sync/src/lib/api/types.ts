@@ -223,3 +223,58 @@ export type LeagueTierStatistics = {
     averageFirstPlaceGap: Num | null;
   };
 };
+
+/* ---------- Army meta ---------- */
+
+export type Cohort = "legend_i" | "top_1000" | "top_200";
+
+export type StarCounts = { zero: number; one: number; two: number; three: number };
+
+export type ArmyFamily = {
+  familyId: string;
+  name: string | null;
+  shareCode: string;
+  attacks: number;
+  players: number | null;
+  starCounts: StarCounts;
+  averageDuration: Num | null;
+  averageDestruction: Num | null;
+  totalLegendAttacks: number;
+};
+
+export type ArmySearchResult = { cohort: Cohort; items: ArmyFamily[] };
+
+export type ArmyTimelineDay = {
+  day: string;
+  totalLegendAttacks: number;
+  attacks: number;
+  players: number;
+  starCounts: StarCounts;
+  averageDuration: Num | null;
+  averageDestruction: Num | null;
+};
+
+export type ArmyTimeline = {
+  cohort: Cohort;
+  familyId: string;
+  name: string | null;
+  shareCode: string;
+  items: ArmyTimelineDay[];
+};
+
+export type LegendDaysUsage = { id: number; uses: number; triples: number };
+
+export type LegendDayStats = {
+  day: string;
+  attacks: number;
+  players: number;
+  starCounts: StarCounts;
+  averageDuration: Num | null;
+  averageDestruction: Num | null;
+  heroes: LegendDaysUsage[];
+  pets: LegendDaysUsage[];
+  equipment: LegendDaysUsage[];
+  petAssignments: Array<{ petId: number; heroId: number; uses: number; triples: number }>;
+};
+
+export type LegendDays = { cohort: Cohort; items: LegendDayStats[] };

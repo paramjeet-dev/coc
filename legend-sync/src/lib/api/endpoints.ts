@@ -8,6 +8,11 @@ import type {
   GlobalCounts,
   LegendDayBattlelog,
   LegendSeasonRecord,
+  ArmySearchResult,
+  ArmyFamily,
+  ArmyTimeline,
+  Cohort,
+  LegendDays,
   LeagueHistoryItem,
   LeagueTierStatistics,
   LegendSeriesDay,
@@ -112,4 +117,38 @@ export const getLeagueTierStatistics = (seasonId: string, leagueTierId: number) 
   apiGet<LeagueTierStatistics>(
     `/v2/stats/league/tournaments/${encodeURIComponent(seasonId)}/tiers/${leagueTierId}`,
     { revalidate: 900 },
+  );
+
+/* ---------- Army meta ---------- */
+
+type ArmySearchParams = {
+  cohort: Cohort;
+  after: string;
+  sort: string;
+  minimumAttacks: number;
+  limit: number;
+};
+
+export const searchArmies = (p: ArmySearchParams) =>
+  apiGet<ArmySearchResult>(
+    `/v2/stats/armies?cohort=${p.cohort}&time[after]=${encodeURIComponent(p.after)}&sort=${p.sort}&direction=desc&minimumAttacks=${p.minimumAttacks}&limit=${p.limit}`,
+    { revalidate: 600 },
+  );
+
+export const getArmyFamily = (armyLink: string, cohort: Cohort, after: string) =>
+  apiGet<ArmyFamily & { cohort: Cohort }>(
+    `/v2/stats/armies/detail?cohort=${cohort}&time[after]=${encodeURIComponent(after)}&armyLink=${encodeURIComponent(armyLink)}`,
+    { revalidate: 600 },
+  );
+
+export const getArmyTimeline = (armyLink: string, cohort: Cohort, after: string) =>
+  apiGet<ArmyTimeline>(
+    `/v2/stats/armies/timeline?cohort=${cohort}&time[after]=${encodeURIComponent(after)}&armyLink=${encodeURIComponent(armyLink)}`,
+    { revalidate: 600 },
+  );
+
+export const getLegendDays = (cohort: Cohort, after: string) =>
+  apiGet<LegendDays>(
+    `/v2/stats/legend/days?cohort=${cohort}&time[after]=${encodeURIComponent(after)}`,
+    { revalidate: 600 },
   );
