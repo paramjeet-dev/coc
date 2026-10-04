@@ -278,3 +278,53 @@ export type LegendDayStats = {
 };
 
 export type LegendDays = { cohort: Cohort; items: LegendDayStats[] };
+
+/* ---------- Clans ---------- */
+
+export type ClanProfile = {
+  name: string;
+  tag: string;
+  badgeUrls: { small: string; medium: string; large: string };
+  description: string;
+  clanLevel: Num;
+  clanPoints: Num;
+  capitalGoldTotal?: Num;
+  location?: { id: Num; name: string; isCountry: boolean; countryCode?: string };
+  warLeague: { id: Num; name: string };
+  publicWarLog: boolean;
+  warWins: Num;
+  warWinStreak: Num;
+  memberCount: Num;
+  troopsDonated?: Num;
+  troopsReceived?: Num;
+  members: Array<{ tag: string; name: string; townHallLevel: Num }>;
+};
+
+export type ClanLegendRow = {
+  season: string;
+  tag: string;
+  name: string;
+  trophies: Num;
+  attackWins: Num;
+  defenseWins: Num;
+  rank: Num;
+};
+
+export type ClanLegendSummary = {
+  seasons: Array<{ season: string; after: string; before: string; playerCount: Num }>;
+  topFinishes: ClanLegendRow[];
+};
+
+export type ClanRecords = {
+  clanPoints?: { value: Num; time: string };
+  warWinStreak?: { value: Num; time: string };
+};
+
+export type ClanRankings = {
+  name: string | null;
+  tag: string;
+  badge: string | null;
+  homeVillage: { points: Num; placements: Array<{ locationId: string; rank: Num; points: Num }> };
+  builderBase: { points: Num; placements: Array<{ locationId: string; rank: Num; points: Num }> };
+  clanCapital: { points: Num; placements: Array<{ locationId: string; rank: Num; points: Num }> };
+};

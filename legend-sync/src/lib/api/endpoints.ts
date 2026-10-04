@@ -3,6 +3,11 @@ import { ApiError, apiGet } from "./client";
 import { tagToApi } from "./tags";
 import type {
   BattleHistoryItem,
+  ClanLegendRow,
+  ClanLegendSummary,
+  ClanProfile,
+  ClanRankings,
+  ClanRecords,
   ClanSearchHit,
   CurrentDates,
   GlobalCounts,
@@ -152,3 +157,24 @@ export const getLegendDays = (cohort: Cohort, after: string) =>
     `/v2/stats/legend/days?cohort=${cohort}&time[after]=${encodeURIComponent(after)}`,
     { revalidate: 600 },
   );
+
+/* ---------- Clans ---------- */
+
+export const getClanProfile = (tag: string) =>
+  apiGet<ClanProfile | null>(`/v2/clan/${tagToApi(tag)}/cached`, { revalidate: 300 });
+
+export const getClanLegendHistory = (tag: string, limit = 250) =>
+  apiGet<{ items: ClanLegendRow[] }>(`/v2/clan/${tagToApi(tag)}/history/legends?limit=${limit}`, {
+    revalidate: 900,
+  });
+
+export const getClanLegendSummary = (tag: string, top = 5) =>
+  apiGet<ClanLegendSummary>(`/v2/clan/${tagToApi(tag)}/history/legends/summary?top=${top}`, {
+    revalidate: 900,
+  });
+
+export const getClanRecords = (tag: string) =>
+  apiGet<ClanRecords>(`/v2/clan/${tagToApi(tag)}/records`, { revalidate: 900 });
+
+export const getClanRankings = (tag: string) =>
+  apiGet<ClanRankings>(`/v2/clan/${tagToApi(tag)}/rankings`, { revalidate: 900 });

@@ -1,11 +1,16 @@
-import { PhaseStub } from "@/components/ui/phase-stub";
+import type { Metadata } from "next";
+import { ClanSearch } from "@/components/search/clan-search";
 
-export default async function ClanPage({ params }: { params: Promise<{ tag: string }> }) {
-  const { tag } = await params;
+export const metadata: Metadata = { title: "Clans" };
+
+export default function ClansPage() {
   return (
-    <PhaseStub
-      title={`Clan #${tag.toUpperCase()}`}
-      summary="Legend summaries by season, top finishes and roster movement. Coming in phase 5."
-    />
+    <div className="max-w-2xl space-y-6 pt-4">
+      <h1 className="text-3xl font-semibold tracking-tight">Clans</h1>
+      <p className="text-ink-300">
+        Search a clan to see how its players finished each Legend season, who carried the roster, and where it ranks.
+      </p>
+      <ClanSearch />
+    </div>
   );
 }
