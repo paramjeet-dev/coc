@@ -1,5 +1,8 @@
 const BASE = (process.env.CLASHKING_API_BASE ?? "https://api.clashk.ing").replace(/\/$/, "");
 
+/** Absolute URL for a path on the stats API, for links such as file downloads. */
+export const apiUrl = (path: string) => `${BASE}${path}`;
+
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string | undefined;

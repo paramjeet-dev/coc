@@ -328,3 +328,88 @@ export type ClanRankings = {
   builderBase: { points: Num; placements: Array<{ locationId: string; rank: Num; points: Num }> };
   clanCapital: { points: Num; placements: Array<{ locationId: string; rank: Num; points: Num }> };
 };
+
+/* ---------- War ---------- */
+
+export type WarAttack = {
+  attackerTag: string;
+  defenderTag: string;
+  stars: Num;
+  destructionPercentage: Num;
+  order: Num;
+  duration: Num;
+};
+
+export type WarMember = {
+  tag: string;
+  name: string;
+  townhallLevel: Num;
+  mapPosition: Num;
+  attacks?: WarAttack[];
+  opponentAttacks?: Num;
+  bestOpponentAttack?: WarAttack;
+};
+
+export type WarSide = {
+  tag: string;
+  name: string;
+  badgeUrls: { small: string; large: string; medium: string };
+  clanLevel: Num;
+  attacks: Num;
+  stars: Num;
+  destructionPercentage: Num;
+  members?: WarMember[];
+};
+
+export type StoredWar = {
+  state: string;
+  teamSize: Num;
+  attacksPerMember?: Num;
+  battleModifier?: string;
+  preparationStartTime: string;
+  startTime?: string;
+  endTime: string;
+  clan: WarSide;
+  opponent: WarSide;
+  warStartTime?: string;
+  tag?: string;
+};
+
+export type WarHitrateRow = {
+  period: string;
+  townHall: number;
+  attacks: number;
+  stars: Array<{ stars: number; count: number }>;
+  averageStars: Num;
+  averageDestruction: Num;
+  averageDuration: Num;
+};
+
+/* ---------- CWL ---------- */
+
+export type CwlSeasonRow = {
+  season: string;
+  state: string;
+  warSize: Num | null;
+  warLeague: { id: Num; name: string } | null;
+  rank: Num | null;
+  stars: Num | null;
+  destruction: Num | null;
+  rounds: { won: Num; tied: Num; lost: Num } | null;
+};
+
+export type CwlGroupClan = {
+  tag: string;
+  name: string;
+  clanLevel: Num;
+  badgeUrls: { small: string; large: string; medium: string };
+  members: Array<{ tag: string; name: string; townHallLevel: Num }>;
+};
+
+export type CwlGroup = {
+  state: string;
+  season: string;
+  warLeague: { id: Num; name: string } | null;
+  clans: CwlGroupClan[];
+  rounds: Array<{ warTags: Array<StoredWar | { tag: string }> }>;
+};

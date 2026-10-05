@@ -9,6 +9,8 @@ import type {
   ClanRankings,
   ClanRecords,
   ClanSearchHit,
+  CwlGroup,
+  CwlSeasonRow,
   CurrentDates,
   GlobalCounts,
   LegendDayBattlelog,
@@ -28,6 +30,8 @@ import type {
   RankedBattlelog,
   RankedLeagueGroup,
   SeasonBounds,
+  StoredWar,
+  WarHitrateRow,
 } from "./types";
 
 export const getGlobalCounts = () => apiGet<GlobalCounts>("/v2/counts", { revalidate: 120 });
@@ -163,7 +167,7 @@ export const getLegendDays = (cohort: Cohort, after: string) =>
 export const getClanProfile = (tag: string) =>
   apiGet<ClanProfile | null>(`/v2/clan/${tagToApi(tag)}/cached`, { revalidate: 300 });
 
-export const getClanLegendHistory = (tag: string, limit = 250) =>
+export const getClanLegendHistory = (tag: string, limit = 400) =>
   apiGet<{ items: ClanLegendRow[] }>(`/v2/clan/${tagToApi(tag)}/history/legends?limit=${limit}`, {
     revalidate: 900,
   });
@@ -178,3 +182,24 @@ export const getClanRecords = (tag: string) =>
 
 export const getClanRankings = (tag: string) =>
   apiGet<ClanRankings>(`/v2/clan/${tagToApi(tag)}/rankings`, { revalidate: 900 });
+
+/* ---------- War ---------- */
+
+export const getClanWars = (tag: string, limit = 40) =>
+  apiGet<{ items: StoredWar[] }>(`/v2/clan/${tagToApi(tag)}/wars?limit=${limit}`, { revalidate: 300 });
+
+export const getWarHitrates = (after: string, interval: "day" | "week" | "month" = "month") =>
+  apiGet<{ items: WarHitrateRow[] }>(
+    `/v2/stats/wars/hitrates?interval=${interval}&time[after]=${encodeURIComponent(after)}`,
+    { revalidate: 1800 },
+  );
+
+/* ---------- CWL ---------- */
+
+export const getCwlSeasons = (tag: string, limit = 24) =>
+  apiGet<{ items: CwlSeasonRow[] }>(`/v2/cwl/${tagToApi(tag)}/seasons?limit=${limit}`, { revalidate: 900 });
+
+export const getCwlGroup = (tag: string, season?: string) =>
+  apiGet<CwlGroup>(`/v2/cwl/${tagToApi(tag)}/group${season ? `?season=${encodeURIComponent(season)}` : ""}`, {
+    revalidate: 600,
+  });

@@ -8,7 +8,13 @@ import type { Num } from "@/lib/api/types";
 
 type Hit = { name: string; tag: string; clanLevel: Num; members: Num };
 
-export function ClanSearch({ placeholder = "Clan name or tag" }: { placeholder?: string }) {
+export function ClanSearch({
+  placeholder = "Clan name or tag",
+  basePath = "/clans",
+}: {
+  placeholder?: string;
+  basePath?: string;
+}) {
   const router = useRouter();
   const listId = useId();
   const [value, setValue] = useState("");
@@ -43,8 +49,8 @@ export function ClanSearch({ placeholder = "Clan name or tag" }: { placeholder?:
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (looksLikeTag(value)) router.push(`/clans/${tagToSlug(value)}`);
-    else if (hits[0]) router.push(`/clans/${tagToSlug(hits[0].tag)}`);
+    if (looksLikeTag(value)) router.push(`${basePath}/${tagToSlug(value)}`);
+    else if (hits[0]) router.push(`${basePath}/${tagToSlug(hits[0].tag)}`);
   }
 
   return (
@@ -77,7 +83,7 @@ export function ClanSearch({ placeholder = "Clan name or tag" }: { placeholder?:
             {hits.map((hit) => (
               <li key={hit.tag}>
                 <Link
-                  href={`/clans/${tagToSlug(hit.tag)}`}
+                  href={`${basePath}/${tagToSlug(hit.tag)}`}
                   className="flex items-center justify-between gap-4 px-4 py-2.5 outline-none hover:bg-ink-800 focus-visible:bg-ink-800"
                 >
                   <span className="min-w-0">
