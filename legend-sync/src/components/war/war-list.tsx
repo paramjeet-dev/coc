@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatPercent } from "@/lib/format";
 import { toNum } from "@/lib/api/types";
+import { AssetIcon } from "@/components/ui/asset-icon";
 import type { OurWar } from "@/lib/war";
 
 const RESULT: Record<OurWar["result"], { label: string; style: string }> = {
@@ -26,7 +27,7 @@ export function WarList({ wars, basePath, selected }: Props) {
         return (
           <li key={w.slug}>
             <Link
-              href={`${basePath}?war=${encodeURIComponent(w.slug)}`}
+              href={`${basePath}${basePath.includes("?") ? "&" : "?"}war=${encodeURIComponent(w.slug)}`}
               scroll={false}
               aria-current={active ? "true" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
@@ -43,6 +44,7 @@ export function WarList({ wars, basePath, selected }: Props) {
               <span className="text-right">
                 <span className={`rounded-md px-2 py-0.5 text-xs font-medium ${r.style}`}>{r.label}</span>
                 <span className="mt-1 block font-mono text-xs tabular-nums text-ink-300">
+                  <AssetIcon name="star" size={12} className="mr-1 align-[-1px]" />
                   {String(toNum(w.us.stars) ?? 0)}-{String(toNum(w.them.stars) ?? 0)}
                   <span className="text-ink-500"> {formatPercent(toNum(w.us.destructionPercentage), 0)}</span>
                 </span>

@@ -30,3 +30,44 @@ export const spellIcon = (name: string) => assetUrl(`spells/${assetSlug(name)}.w
 export const equipmentIcon = (name: string) => assetUrl(`equipment/${assetSlug(name)}.webp`);
 
 export const legendLandscape = () => assetUrl("landscape/legend-landscape.png");
+
+/**
+ * Every glyph has an emoji fallback in components/ui/asset-icon.tsx, so a wrong
+ * path degrades to the emoji instead of a broken image.
+ */
+export type UiIcon =
+  | "star"
+  | "star_empty"
+  | "gold"
+  | "elixir"
+  | "dark_elixir"
+  | "defense"
+  | "attack"
+  | "trophy"
+  | "clock";
+
+export const UI_ICON_PATH: Record<UiIcon, string> = {
+  star: "ui/star.png",
+  star_empty: "ui/star_empty.png",
+  gold: "resources/gold.webp",
+  elixir: "resources/elixir.webp",
+  dark_elixir: "resources/dark_elixir.webp",
+  defense: "ui/defense.png",
+  attack: "ui/attack.png",
+  trophy: "ui/trophy.png",
+  clock: "ui/clock.png",
+};
+
+export const UI_ICON_EMOJI: Record<UiIcon, string> = {
+  star: "\u2B50",
+  star_empty: "\u2B50",
+  gold: "\uD83E\uDE99",
+  elixir: "\uD83D\uDCA7",
+  dark_elixir: "\uD83D\uDDA4",
+  defense: "\uD83D\uDEE1\uFE0F",
+  attack: "\u2694\uFE0F",
+  trophy: "\uD83C\uDFC6",
+  clock: "\u23F1\uFE0F",
+};
+
+export const uiIcon = (name: UiIcon) => assetUrl(UI_ICON_PATH[name]);

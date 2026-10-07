@@ -1,6 +1,7 @@
 import { CopyCode } from "./copy-code";
 import { StarMarks } from "@/components/legend/star-marks";
-import { formatCompact, formatPercent } from "@/lib/format";
+import { ResourceAmount } from "@/components/ui/resource-amount";
+import { formatPercent } from "@/lib/format";
 import { formatDuration, parseBattleTime } from "@/lib/legend";
 import { toNum, type BattleHistoryItem } from "@/lib/api/types";
 
@@ -14,12 +15,16 @@ function clock(time: string): string {
   return parseBattleTime(time).toISOString().slice(11, 16);
 }
 
-function loot(item: BattleHistoryItem): string {
+function Loot({ item }: { item: BattleHistoryItem }) {
   const { gold, elixir, darkElixir } = item.lootedResources ?? { gold: 0, elixir: 0, darkElixir: 0 };
-  if (!gold && !elixir && !darkElixir) return "";
-  return [gold && `${formatCompact(gold)} G`, elixir && `${formatCompact(elixir)} E`, darkElixir && `${formatCompact(darkElixir)} DE`]
-    .filter(Boolean)
-    .join("  ");
+  if (!gold && !elixir && !darkElixir) return null;
+  return (
+    <span className="flex items-center gap-3">
+      {gold ? <ResourceAmount kind="gold" amount={gold} /> : null}
+      {elixir ? <ResourceAmount kind="elixir" amount={elixir} /> : null}
+      {darkElixir ? <ResourceAmount kind="darkElixir" amount={darkElixir} /> : null}
+    </span>
+  );
 }
 
 function dayLabel(day: string): string {
@@ -42,7 +47,6 @@ export function BattleList({ groups }: Props) {
           </h3>
           <ul className="divide-y divide-ink-800">
             {group.items.map((item, i) => {
-              const lootText = loot(item);
               return (
                 <li
                   key={`${item.battleTime}-${i}`}
@@ -59,7 +63,7 @@ export function BattleList({ groups }: Props) {
                   <span className="hidden font-mono tabular-nums text-ink-300 sm:block">
                     {formatDuration(item.duration)}
                   </span>
-                  <span className="hidden truncate font-mono text-xs text-ink-500 sm:block">{lootText}</span>
+                  <span className="hidden truncate font-mono text-xs text-ink-300 sm:block"><Loot item={item} /></span>
                   <span className="justify-self-end">
                     {item.shareCode ? (
                       <CopyCode code={item.shareCode} />

@@ -72,7 +72,7 @@ export function ArmyDetail({ family, timeline }: { family: ArmyFamily; timeline:
             <p className="mt-1 text-xs text-ink-500">Solid line is triple rate, dashed is share of all Legend attacks.</p>
           </>
         ) : (
-          <p className="mt-2 text-sm text-ink-300">Not enough days of data in this window to draw a trend.</p>
+          <p className="mt-2 text-sm text-ink-300">Not enough days of data to draw a trend.</p>
         )}
       </div>
     </div>

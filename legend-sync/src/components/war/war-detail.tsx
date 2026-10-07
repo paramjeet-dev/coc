@@ -4,7 +4,8 @@ import { StarMarks } from "@/components/legend/star-marks";
 import { formatPercent } from "@/lib/format";
 import { tagToSlug } from "@/lib/api/tags";
 import { toNum, type WarSide } from "@/lib/api/types";
-import { memberLines, type OurWar } from "@/lib/war";
+import { AssetIcon } from "@/components/ui/asset-icon";
+import { WAR_KINDS, memberLines, type OurWar } from "@/lib/war";
 
 function Scoreboard({ side, align }: { side: WarSide; align: "left" | "right" }) {
   return (
@@ -12,7 +13,10 @@ function Scoreboard({ side, align }: { side: WarSide; align: "left" | "right" })
       <Image src={side.badgeUrls.medium} alt="" width={56} height={56} className="size-14 shrink-0" unoptimized />
       <div className="min-w-0">
         <p className="truncate font-semibold">{side.name}</p>
-        <p className="font-mono text-3xl font-semibold tabular-nums text-gold-300">{String(toNum(side.stars) ?? 0)}</p>
+        <p className="flex items-center gap-2 font-mono text-3xl font-semibold tabular-nums text-gold-300">
+          <AssetIcon name="star" size={26} />
+          {String(toNum(side.stars) ?? 0)}
+        </p>
         <p className="font-mono text-xs tabular-nums text-ink-500">{formatPercent(toNum(side.destructionPercentage), 1)} destruction</p>
       </div>
     </div>
@@ -32,7 +36,12 @@ export function WarDetail({ item }: { item: OurWar }) {
         <span className="text-xs uppercase tracking-widest text-ink-500">vs</span>
         <Scoreboard side={item.them} align="right" />
       </div>
-      {modifier && <p className="mt-3 text-xs text-ink-300">Battle modifier: {modifier}</p>}
+      <p className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-300">
+        <span className="rounded-md bg-tide-400/15 px-2 py-0.5 font-medium text-tide-400">
+          {WAR_KINDS.find((k) => k.value === item.kind)?.label}
+        </span>
+        {modifier && <span>Battle modifier: {modifier}</span>}
+      </p>
 
       {lines.length === 0 ? (
         <p className="mt-6 text-sm text-ink-300">Member attacks were not stored for this war.</p>
@@ -46,9 +55,19 @@ export function WarDetail({ item }: { item: OurWar }) {
                 <th scope="col" className="py-2 pr-3 font-medium">Player</th>
                 <th scope="col" className="py-2 pr-3 text-right font-medium">TH</th>
                 {Array.from({ length: per }, (_, i) => (
-                  <th key={i} scope="col" className="py-2 pr-3 font-medium">Attack {i + 1}</th>
+                  <th key={i} scope="col" className="py-2 pr-3 font-medium">
+                    <span className="inline-flex items-center gap-1.5">
+                      <AssetIcon name="attack" size={14} />
+                      Attack {i + 1}
+                    </span>
+                  </th>
                 ))}
-                <th scope="col" className="py-2 text-right font-medium">Stars taken</th>
+                <th scope="col" className="py-2 text-right font-medium">
+                  <span className="inline-flex items-center gap-1.5">
+                    <AssetIcon name="defense" size={14} />
+                    Stars taken
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-800 font-mono tabular-nums">
@@ -76,7 +95,16 @@ export function WarDetail({ item }: { item: OurWar }) {
                       </td>
                     );
                   })}
-                  <td className="py-2 text-right text-ink-300">{l.defenseStars ?? "n/a"}</td>
+                  <td className="py-2 text-right text-ink-300">
+                    {l.defenseStars === null ? (
+                      "n/a"
+                    ) : (
+                      <span className="inline-flex items-center gap-1">
+                        {l.defenseStars}
+                        <AssetIcon name="star" size={13} />
+                      </span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

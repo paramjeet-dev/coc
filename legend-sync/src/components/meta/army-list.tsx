@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { formatInt, formatPercent } from "@/lib/format";
 import { toNum, type ArmyFamily, type Cohort } from "@/lib/api/types";
-import { describeFamily, tripleRate, usageShare, zeroStarRate, type SortKey, type WindowDays } from "@/lib/meta";
+import { describeFamily, tripleRate, usageShare, zeroStarRate, type SortKey } from "@/lib/meta";
 import { formatDuration } from "@/lib/legend";
 
-type Props = { armies: ArmyFamily[]; cohort: Cohort; sort: SortKey; window: WindowDays; selected?: string };
+type Props = { armies: ArmyFamily[]; cohort: Cohort; sort: SortKey; selected?: string };
 
-export function ArmyList({ armies, cohort, sort, window, selected }: Props) {
+export function ArmyList({ armies, cohort, sort, selected }: Props) {
   if (armies.length === 0) {
-    return <p className="text-sm text-ink-300">No army families meet the minimum for this window. Try a longer window or a wider cohort.</p>;
+    return <p className="text-sm text-ink-300">No army families meet the minimum for this cohort. Try a wider cohort.</p>;
   }
   const topUse = Math.max(...armies.map((a) => usageShare(a) ?? 0), 1);
 
@@ -17,7 +17,7 @@ export function ArmyList({ armies, cohort, sort, window, selected }: Props) {
       {armies.map((a, i) => {
         const active = a.shareCode === selected;
         const share = usageShare(a);
-        const q = new URLSearchParams({ cohort, sort, window: String(window), army: a.shareCode });
+        const q = new URLSearchParams({ cohort, sort, army: a.shareCode });
         return (
           <li key={a.familyId}>
             <Link

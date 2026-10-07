@@ -1,4 +1,5 @@
-import { formatCompact, formatPercent } from "@/lib/format";
+import { ResourceAmount } from "@/components/ui/resource-amount";
+import { formatPercent } from "@/lib/format";
 import { formatDuration } from "@/lib/legend";
 import type { ModeSummary } from "@/lib/battlelog";
 
@@ -7,8 +8,9 @@ const LABEL: Record<ModeSummary["mode"], string> = { legend: "Legend", ranked: "
 /** One lead tile for the busiest mode, with the others as a compact ledger beside it. */
 export function ModeSummaryBlock({ summaries }: { summaries: ModeSummary[] }) {
   const active = summaries.filter((s) => s.attacks > 0).sort((a, b) => b.attacks - a.attacks);
-  if (active.length === 0) return null;
-  const [lead, ...rest] = active;
+  const lead = active[0];
+  if (!lead) return null;
+  const rest = active.slice(1);
 
   return (
     <div className="grid gap-5 lg:grid-cols-12">
@@ -29,9 +31,11 @@ export function ModeSummaryBlock({ summaries }: { summaries: ModeSummary[] }) {
           ))}
         </dl>
         {lead.mode === "farming" && (
-          <p className="mt-5 font-mono text-xs text-ink-300">
-            Looted {formatCompact(lead.gold)} gold, {formatCompact(lead.elixir)} elixir,{" "}
-            {formatCompact(lead.darkElixir)} dark elixir
+          <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-ink-300">
+            <span>Looted</span>
+            <ResourceAmount kind="gold" amount={lead.gold} />
+            <ResourceAmount kind="elixir" amount={lead.elixir} />
+            <ResourceAmount kind="darkElixir" amount={lead.darkElixir} />
           </p>
         )}
       </div>

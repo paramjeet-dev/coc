@@ -132,7 +132,6 @@ export const getLeagueTierStatistics = (seasonId: string, leagueTierId: number) 
 
 type ArmySearchParams = {
   cohort: Cohort;
-  after: string;
   sort: string;
   minimumAttacks: number;
   limit: number;
@@ -140,19 +139,19 @@ type ArmySearchParams = {
 
 export const searchArmies = (p: ArmySearchParams) =>
   apiGet<ArmySearchResult>(
-    `/v2/stats/armies?cohort=${p.cohort}&time[after]=${encodeURIComponent(p.after)}&sort=${p.sort}&direction=desc&minimumAttacks=${p.minimumAttacks}&limit=${p.limit}`,
+    `/v2/stats/armies?cohort=${p.cohort}&sort=${p.sort}&direction=desc&minimumAttacks=${p.minimumAttacks}&limit=${p.limit}`,
     { revalidate: 600 },
   );
 
-export const getArmyFamily = (armyLink: string, cohort: Cohort, after: string) =>
+export const getArmyFamily = (armyLink: string, cohort: Cohort) =>
   apiGet<ArmyFamily & { cohort: Cohort }>(
-    `/v2/stats/armies/detail?cohort=${cohort}&time[after]=${encodeURIComponent(after)}&armyLink=${encodeURIComponent(armyLink)}`,
+    `/v2/stats/armies/detail?cohort=${cohort}&armyLink=${encodeURIComponent(armyLink)}`,
     { revalidate: 600 },
   );
 
-export const getArmyTimeline = (armyLink: string, cohort: Cohort, after: string) =>
+export const getArmyTimeline = (armyLink: string, cohort: Cohort) =>
   apiGet<ArmyTimeline>(
-    `/v2/stats/armies/timeline?cohort=${cohort}&time[after]=${encodeURIComponent(after)}&armyLink=${encodeURIComponent(armyLink)}`,
+    `/v2/stats/armies/timeline?cohort=${cohort}&armyLink=${encodeURIComponent(armyLink)}`,
     { revalidate: 600 },
   );
 
@@ -185,8 +184,11 @@ export const getClanRankings = (tag: string) =>
 
 /* ---------- War ---------- */
 
-export const getClanWars = (tag: string, limit = 40) =>
-  apiGet<{ items: StoredWar[] }>(`/v2/clan/${tagToApi(tag)}/wars?limit=${limit}`, { revalidate: 300 });
+export const getClanWars = (tag: string, limit = 40, type?: "random" | "cwl" | "friendly") =>
+  apiGet<{ items: StoredWar[] }>(`/v2/clan/${tagToApi(tag)}/wars`, {
+    query: { limit, type },
+    revalidate: 300,
+  });
 
 export const getWarHitrates = (after: string, interval: "day" | "week" | "month" = "month") =>
   apiGet<{ items: WarHitrateRow[] }>(

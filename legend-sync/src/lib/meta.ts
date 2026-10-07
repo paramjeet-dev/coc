@@ -14,18 +14,11 @@ export const SORTS = [
 ] as const;
 export type SortKey = (typeof SORTS)[number]["value"];
 
-export const WINDOWS = [3, 7, 14] as const;
-export type WindowDays = (typeof WINDOWS)[number];
-
 export function parseCohort(raw: string | undefined): Cohort {
   return COHORTS.some((c) => c.value === raw) ? (raw as Cohort) : "top_200";
 }
 export function parseSort(raw: string | undefined): SortKey {
   return SORTS.some((s) => s.value === raw) ? (raw as SortKey) : "usage";
-}
-export function parseWindow(raw: string | undefined): WindowDays {
-  const n = Number(raw);
-  return (WINDOWS as readonly number[]).includes(n) ? (n as WindowDays) : 7;
 }
 
 export function totalAttacks(s: StarCounts): number {

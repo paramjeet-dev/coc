@@ -2,16 +2,29 @@ import { toNum, type StoredWar, type WarAttack, type WarHitrateRow, type WarMemb
 
 export type WarResult = "win" | "loss" | "tie";
 
+export type WarKind = "random" | "cwl" | "friendly";
+
+export const WAR_KINDS: Array<{ value: WarKind; label: string; short: string }> = [
+  { value: "random", label: "Regular wars", short: "Regular" },
+  { value: "cwl", label: "Clan War League", short: "CWL" },
+  { value: "friendly", label: "Friendly wars", short: "Friendly" },
+];
+
+export function parseWarKind(raw: string | undefined): WarKind | null {
+  return WAR_KINDS.some((k) => k.value === raw) ? (raw as WarKind) : null;
+}
+
 export type OurWar = {
   war: StoredWar;
   us: WarSide;
   them: WarSide;
   result: WarResult;
   slug: string;
+  kind: WarKind;
 };
 
 /** Orient a stored war so `us` is always the clan being viewed. */
-export function orient(war: StoredWar, tag: string): OurWar {
+export function orient(war: StoredWar, tag: string, kind: WarKind = "random"): OurWar {
   const swap = war.clan.tag !== tag && war.opponent.tag === tag;
   const us = swap ? war.opponent : war.clan;
   const them = swap ? war.clan : war.opponent;
@@ -20,7 +33,7 @@ export function orient(war: StoredWar, tag: string): OurWar {
   const da = toNum(us.destructionPercentage) ?? 0;
   const db = toNum(them.destructionPercentage) ?? 0;
   const result: WarResult = a !== b ? (a > b ? "win" : "loss") : da !== db ? (da > db ? "win" : "loss") : "tie";
-  return { war, us, them, result, slug: war.endTime };
+  return { war, us, them, result, slug: war.endTime, kind };
 }
 
 export function endedOnly(wars: StoredWar[]): StoredWar[] {

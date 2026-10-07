@@ -1,6 +1,7 @@
 import { formatDuration, parseBattleTime } from "@/lib/legend";
 import { formatPercent } from "@/lib/format";
 import { toNum, type LegendBattle, type LegendDayBattlelog } from "@/lib/api/types";
+import { AssetIcon } from "@/components/ui/asset-icon";
 import { StarMarks } from "./star-marks";
 
 function clock(time: string): string {
@@ -49,7 +50,8 @@ export function DayInspector({ log }: { log: LegendDayBattlelog }) {
     <div className="grid gap-8 lg:grid-cols-2">
       <section aria-labelledby="attacks-heading">
         <div className="flex items-baseline justify-between">
-          <h3 id="attacks-heading" className="text-base font-semibold">
+          <h3 id="attacks-heading" className="flex items-center gap-2 text-base font-semibold">
+            <AssetIcon name="attack" size={20} />
             Attacks
           </h3>
           <span className="font-mono text-sm tabular-nums text-tide-400">
@@ -69,7 +71,8 @@ export function DayInspector({ log }: { log: LegendDayBattlelog }) {
 
       <section aria-labelledby="defenses-heading">
         <div className="flex items-baseline justify-between">
-          <h3 id="defenses-heading" className="text-base font-semibold">
+          <h3 id="defenses-heading" className="flex items-center gap-2 text-base font-semibold">
+            <AssetIcon name="defense" size={20} />
             Defenses
           </h3>
           <span className="font-mono text-sm tabular-nums text-ember-400">

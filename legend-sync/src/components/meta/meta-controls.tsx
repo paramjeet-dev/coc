@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { COHORTS, SORTS, WINDOWS, type SortKey, type WindowDays } from "@/lib/meta";
+import { COHORTS, SORTS, type SortKey } from "@/lib/meta";
 import type { Cohort } from "@/lib/api/types";
 
-type Props = { cohort: Cohort; sort: SortKey; window: WindowDays; army?: string };
+type Props = { cohort: Cohort; sort: SortKey; army?: string };
 
 function href(p: Props, next: Partial<Props>) {
   const m = { ...p, ...next };
-  const q = new URLSearchParams({ cohort: m.cohort, sort: m.sort, window: String(m.window) });
+  const q = new URLSearchParams({ cohort: m.cohort, sort: m.sort });
   if (m.army) q.set("army", m.army);
   return `/meta?${q.toString()}`;
 }
@@ -31,22 +31,6 @@ export function MetaControls(props: Props) {
               className={pill(c.value === props.cohort)}
             >
               {c.label}
-            </Link>
-          ))}
-        </nav>
-        <nav aria-label="Time window" className="flex items-center gap-1 text-sm">
-          <span className="mr-1 text-ink-500">Last</span>
-          {WINDOWS.map((w) => (
-            <Link
-              key={w}
-              href={href(props, { window: w })}
-              scroll={false}
-              aria-current={w === props.window ? "true" : undefined}
-              className={`rounded-md px-2.5 py-1 font-mono tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
-                w === props.window ? "bg-ink-700 text-ink-100" : "text-ink-300 hover:text-ink-100"
-              }`}
-            >
-              {w}d
             </Link>
           ))}
         </nav>
