@@ -108,3 +108,17 @@ export function runningTotal(days: LegendSeriesDay[]): Array<{ day: string; trop
     return { day: dayKey(d.day), trophies: total };
   });
 }
+
+/**
+ * Season identifiers come as "2026-05-18" (old) or "v2-2026-06-15T05:00:00Z" (new).
+ * Show both as a plain date.
+ */
+export function seasonLabel(raw: string): string {
+  return dayKey(raw);
+}
+
+/** Old-format seasons all predate the v2 ones, so rank by format first and date second. */
+export function compareSeasons(a: string, b: string): number {
+  const rank = (raw: string) => (/^v\d+-/.test(raw) ? 1 : 0);
+  return rank(a) - rank(b) || dayKey(a).localeCompare(dayKey(b));
+}

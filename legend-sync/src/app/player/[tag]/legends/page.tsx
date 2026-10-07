@@ -15,10 +15,12 @@ import {
 import { normalizeTag } from "@/lib/api/tags";
 import { formatPercent } from "@/lib/format";
 import {
+  compareSeasons,
   dayKey,
   formatDuration,
   groupLegendAttacks,
   runningTotal,
+  seasonLabel,
   summarizeAttacks,
   trimInactive,
 } from "@/lib/legend";
@@ -30,6 +32,8 @@ const MS_DAY = 86_400_000;
 function signed(n: number): string {
   return n > 0 ? `+${n}` : String(n);
 }
+
+export const dynamic = "force-dynamic";
 
 export default async function PlayerLegendsPage({
   params,
@@ -58,7 +62,7 @@ export default async function PlayerLegendsPage({
 
   const seasons =
     history.status === "fulfilled"
-      ? [...history.value.items].sort((a, b) => b.season.localeCompare(a.season))
+      ? [...history.value.items].sort((a, b) => compareSeasons(b.season, a.season))
       : [];
   const battleItems = battles.status === "fulfilled" ? battles.value.items : [];
 
@@ -176,7 +180,7 @@ export default async function PlayerLegendsPage({
           >
             <SeasonHistoryChart
               data={[...seasons].reverse().map((s) => ({
-                season: s.season,
+                season: seasonLabel(s.season),
                 trophies: typeof s.trophies === "number" ? s.trophies : 0,
               }))}
             />

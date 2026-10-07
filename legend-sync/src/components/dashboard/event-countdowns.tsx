@@ -12,6 +12,15 @@ import {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+const WHEN = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+  timeZone: "UTC",
+});
+
 function Clock({ clock, now }: { clock: EventClock | null; now: Date | null }) {
   if (!clock || !now) {
     return <span className="font-mono text-base tabular-nums text-ink-500">--:--:--</span>;
@@ -70,6 +79,9 @@ export function EventCountdowns({ seasonEnd }: { seasonEnd: string | null }) {
           </dt>
           <dd className="mt-1">
             <Clock clock={row.clock} now={now} />
+            {row.clock && (
+              <span className="mt-0.5 block text-xs text-ink-500">{WHEN.format(row.clock.target)} UTC</span>
+            )}
           </dd>
         </div>
       ))}

@@ -5,7 +5,9 @@ import { formatPercent } from "@/lib/format";
 import { tagToSlug } from "@/lib/api/tags";
 import { toNum, type WarSide } from "@/lib/api/types";
 import { AssetIcon } from "@/components/ui/asset-icon";
-import { WAR_KINDS, memberLines, type OurWar } from "@/lib/war";
+import { townHallIcon } from "@/lib/assets";
+import { RESULT_STYLE } from "./result-style";
+import { WAR_KINDS, attacksPerMember, memberLines, type OurWar } from "@/lib/war";
 
 function Scoreboard({ side, align }: { side: WarSide; align: "left" | "right" }) {
   return (
@@ -23,18 +25,34 @@ function Scoreboard({ side, align }: { side: WarSide; align: "left" | "right" })
   );
 }
 
+function TownHallBadge({ level }: { level: number | null }) {
+  const src = townHallIcon(level);
+  if (!src || level === null) return <span className="block text-right text-ink-300">{level ?? ""}</span>;
+  return (
+    <span className="flex justify-end">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={`Town Hall ${level}`} title={`Town Hall ${level}`} width={30} height={30} loading="lazy" className="size-[30px] object-contain" />
+    </span>
+  );
+}
+
 export function WarDetail({ item }: { item: OurWar }) {
-  const per = toNum(item.war.attacksPerMember) ?? 2;
+  const per = attacksPerMember(item.war, item.kind);
   const lines = memberLines(item.us, per);
   const missedTotal = lines.reduce((s, l) => s + l.missed, 0);
   const modifier = item.war.battleModifier && item.war.battleModifier !== "none" ? item.war.battleModifier : null;
 
   return (
     <div>
+      <div className={`rounded-2xl p-4 sm:p-5 ${RESULT_STYLE[item.result].row.split(" ")[0]}`}>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-300">
+          {RESULT_STYLE[item.result].headline}
+        </p>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
         <Scoreboard side={item.us} align="left" />
         <span className="text-xs uppercase tracking-widest text-ink-500">vs</span>
         <Scoreboard side={item.them} align="right" />
+      </div>
       </div>
       <p className="mt-3 flex flex-wrap items-center gap-3 text-xs text-ink-300">
         <span className="rounded-md bg-tide-400/15 px-2 py-0.5 font-medium text-tide-400">
@@ -79,7 +97,9 @@ export function WarDetail({ item }: { item: OurWar }) {
                       {l.name}
                     </Link>
                   </th>
-                  <td className="py-2 pr-3 text-right text-ink-300">{l.townHall ?? ""}</td>
+                  <td className="py-2 pr-3">
+                    <TownHallBadge level={l.townHall} />
+                  </td>
                   {Array.from({ length: per }, (_, i) => {
                     const a = l.attacks[i];
                     return (

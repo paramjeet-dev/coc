@@ -1,13 +1,8 @@
+import { RESULT_STYLE } from "@/components/war/result-style";
 import Link from "next/link";
 import Image from "next/image";
 import { toNum } from "@/lib/api/types";
 import type { OurRound } from "@/lib/cwl";
-
-const RESULT = {
-  win: "bg-gold-400/15 text-gold-300",
-  loss: "bg-ember-400/15 text-ember-400",
-  tie: "bg-ink-700 text-ink-300",
-} as const;
 
 type Props = { rounds: OurRound[]; basePath: string; season: string; selected: number };
 
@@ -27,7 +22,7 @@ export function RoundList({ rounds, basePath, season, selected }: Props) {
             </span>
             <span className="text-right">
               {war.war.state === "warEnded" && (
-                <span className={`rounded-md px-2 py-0.5 text-xs font-medium capitalize ${RESULT[war.result]}`}>{war.result}</span>
+                <span className={`rounded-md px-2 py-0.5 text-xs font-semibold capitalize ${RESULT_STYLE[war.result].badge}`}>{war.result}</span>
               )}
               <span className="mt-1 block font-mono text-xs tabular-nums text-ink-300">
                 {String(toNum(war.us.stars) ?? 0)}-{String(toNum(war.them.stars) ?? 0)}

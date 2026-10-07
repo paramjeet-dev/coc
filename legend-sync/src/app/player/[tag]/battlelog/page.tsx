@@ -22,6 +22,8 @@ export const metadata: Metadata = { title: "Battle log" };
 const MS_DAY = 86_400_000;
 const LIST_CAP = 150;
 
+export const dynamic = "force-dynamic";
+
 export default async function PlayerBattlelogPage({
   params,
   searchParams,

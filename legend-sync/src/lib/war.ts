@@ -10,6 +10,13 @@ export const WAR_KINDS: Array<{ value: WarKind; label: string; short: string }> 
   { value: "friendly", label: "Friendly wars", short: "Friendly" },
 ];
 
+/** Clan War League gives one attack per member. Regular and friendly wars give two. */
+export function attacksPerMember(war: StoredWar, kind: WarKind): number {
+  if (kind === "cwl") return 1;
+  const n = toNum(war.attacksPerMember);
+  return n && n > 0 ? n : 2;
+}
+
 export function parseWarKind(raw: string | undefined): WarKind | null {
   return WAR_KINDS.some((k) => k.value === raw) ? (raw as WarKind) : null;
 }
@@ -62,8 +69,8 @@ export function warRecord(wars: OurWar[]): WarRecord {
   let stars = 0;
   let destruction = 0;
   let triples = 0;
-  for (const { war, us } of wars) {
-    const per = toNum(war.attacksPerMember) ?? 2;
+  for (const { war, us, kind } of wars) {
+    const per = attacksPerMember(war, kind);
     const members = us.members ?? [];
     attacksAvailable += members.length * per;
     for (const m of members) {
@@ -138,8 +145,8 @@ export type PlayerWarTotals = {
 /** Per-player totals across the given wars, best average stars first. */
 export function playerTotals(wars: OurWar[]): PlayerWarTotals[] {
   const map = new Map<string, PlayerWarTotals>();
-  for (const { war, us } of wars) {
-    const per = toNum(war.attacksPerMember) ?? 2;
+  for (const { war, us, kind } of wars) {
+    const per = attacksPerMember(war, kind);
     for (const m of us.members ?? []) {
       const row =
         map.get(m.tag) ??

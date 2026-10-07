@@ -3,6 +3,10 @@ import { PlayerHeader } from "@/components/player/player-header";
 import { PlayerTabs } from "@/components/player/player-tabs";
 import { getLegendHistory, getPlayerRankings, searchPlayers } from "@/lib/api/endpoints";
 import { isValidTag, normalizeTag } from "@/lib/api/tags";
+import { compareSeasons } from "@/lib/legend";
+
+/** Player data changes every few minutes, so never serve a cached copy of these pages. */
+export const dynamic = "force-dynamic";
 
 export default async function PlayerLayout({
   children,
@@ -22,7 +26,7 @@ export default async function PlayerLayout({
   ]);
 
   const seasons = history.status === "fulfilled" ? history.value.items : [];
-  const latest = [...seasons].sort((a, b) => b.season.localeCompare(a.season))[0] ?? null;
+  const latest = [...seasons].sort((a, b) => compareSeasons(b.season, a.season))[0] ?? null;
   const profile =
     search.status === "fulfilled"
       ? (search.value.items.find((hit) => hit.tag === tag) ?? null)

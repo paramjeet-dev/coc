@@ -68,12 +68,12 @@ export async function getSeasonBounds(): Promise<SeasonBounds> {
 export const getLegendSeries = (tag: string, after?: string, before?: string) =>
   apiGet<{ tag: string; items: LegendSeriesDay[] }>(`/v2/player/${tagToApi(tag)}/legend/series`, {
     query: { "time[after]": after, "time[before]": before },
-    revalidate: 120,
+    revalidate: 0,
   });
 
 export const getLegendHistory = (tag: string) =>
   apiGet<{ items: LegendSeasonRecord[] }>(`/v2/player/${tagToApi(tag)}/legend-history`, {
-    revalidate: 600,
+    revalidate: 0,
   });
 
 /** Tries the day in each known format, since the API's day identifier format has changed once already. */
@@ -83,7 +83,7 @@ export async function getLegendDayBattlelog(tag: string, rawDay: string): Promis
     try {
       return await apiGet<LegendDayBattlelog>(
         `/v2/player/${tagToApi(tag)}/legend/${encodeURIComponent(candidate)}/battlelog`,
-        { revalidate: 120 },
+        { revalidate: 0 },
       );
     } catch (error) {
       lastError = error;
@@ -97,23 +97,23 @@ export async function getLegendDayBattlelog(tag: string, rawDay: string): Promis
 export const getBattlelogHistory = (tag: string, after?: string, before?: string) =>
   apiGet<{ items: BattleHistoryItem[] }>(`/v2/player/${tagToApi(tag)}/battlelog/history`, {
     query: { "time[after]": after, "time[before]": before },
-    revalidate: 120,
+    revalidate: 0,
   });
 
 export const getPlayerRankings = (tag: string) =>
-  apiGet<PlayerRankings>(`/v2/player/${tagToApi(tag)}/rankings`, { revalidate: 300 });
+  apiGet<PlayerRankings>(`/v2/player/${tagToApi(tag)}/rankings`, { revalidate: 0 });
 
 /* ---------- Ranked seasons ---------- */
 
 export const getLeagueHistory = (tag: string) =>
   apiGet<{ items: LeagueHistoryItem[] }>(`/v2/player/${tagToApi(tag)}/league/history`, {
-    revalidate: 300,
+    revalidate: 0,
   });
 
 export const getRankedBattlelog = (tag: string, seasonId: string) =>
   apiGet<RankedBattlelog>(
     `/v2/player/${tagToApi(tag)}/ranked/${encodeURIComponent(seasonId)}/battlelog`,
-    { revalidate: 300 },
+    { revalidate: 0 },
   );
 
 export const getRankedGroup = (seasonId: string, leagueGroupId: string) =>

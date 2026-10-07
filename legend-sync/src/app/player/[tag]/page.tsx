@@ -1,191 +1,185 @@
 import type { Metadata } from "next";
-import { AttackDefenseChart } from "@/components/legend/attack-defense-chart";
-import { AttackStrip } from "@/components/legend/attack-strip";
+import Image from "next/image";
 import { DayInspector } from "@/components/legend/day-inspector";
-import { SeasonHistoryChart } from "@/components/legend/season-history-chart";
-import { SeasonTable } from "@/components/legend/season-table";
-import { TrophyTideChart } from "@/components/legend/trophy-tide-chart";
+import { PercentileLadder } from "@/components/ranked/percentile-ladder";
+import { RankedTrophyChart } from "@/components/ranked/ranked-trophy-chart";
+import { SeasonTrail } from "@/components/ranked/season-trail";
+import { Standings } from "@/components/ranked/standings";
 import { Panel } from "@/components/ui/panel";
 import {
-  getBattlelogHistory,
-  getLegendDayBattlelog,
-  getLegendHistory,
-  getLegendSeries,
+  getLeagueHistory,
+  getLeagueTierStatistics,
+  getRankedBattlelog,
+  getRankedGroup,
 } from "@/lib/api/endpoints";
 import { normalizeTag } from "@/lib/api/tags";
-import { formatPercent } from "@/lib/format";
-import {
-  dayKey,
-  formatDuration,
-  groupLegendAttacks,
-  runningTotal,
-  summarizeAttacks,
-  trimInactive,
-} from "@/lib/legend";
+import { toNum } from "@/lib/api/types";
+import { leagueTierIcon } from "@/lib/assets";
+import { formatInt, formatPercent } from "@/lib/format";
+import { rankedSeasons, starsPerBattle, tierStanding, winRate } from "@/lib/ranked";
 
-export const metadata: Metadata = { title: "Legends history" };
+export const metadata: Metadata = { title: "Ranked seasons" };
 
-const MS_DAY = 86_400_000;
+export const dynamic = "force-dynamic";
 
-function signed(n: number): string {
-  return n > 0 ? `+${n}` : String(n);
-}
-
-export default async function PlayerLegendsPage({
+export default async function PlayerRankedPage({
   params,
   searchParams,
 }: {
   params: Promise<{ tag: string }>;
-  searchParams: Promise<{ day?: string }>;
+  searchParams: Promise<{ season?: string }>;
 }) {
   const { tag: slug } = await params;
-  const { day } = await searchParams;
+  const { season } = await searchParams;
   const tag = normalizeTag(slug);
-  const after = new Date(Date.now() - 31 * MS_DAY).toISOString();
+  const basePath = `/player/${slug.toUpperCase().replace(/^#/, "")}/ranked`;
 
-  const [series, history, battles] = await Promise.allSettled([
-    getLegendSeries(tag),
-    getLegendHistory(tag),
-    getBattlelogHistory(tag, after),
-  ]);
+  const history = await getLeagueHistory(tag).then(
+    (r) => ({ ok: true as const, seasons: rankedSeasons(r.items) }),
+    () => ({ ok: false as const, seasons: [] }),
+  );
 
-  const allDays =
-    series.status === "fulfilled"
-      ? [...series.value.items].sort((a, b) => dayKey(a.day).localeCompare(dayKey(b.day)))
-      : [];
-  const days = trimInactive(allDays);
-  const keys = days.map((d) => dayKey(d.day));
-
-  const seasons =
-    history.status === "fulfilled"
-      ? [...history.value.items].sort((a, b) => b.season.localeCompare(a.season))
-      : [];
-  const battleItems = battles.status === "fulfilled" ? battles.value.items : [];
-
-  const attacksByDay = groupLegendAttacks(battleItems);
-  const summary = summarizeAttacks(battleItems);
-
-  const selectedKey = day && keys.includes(day) ? day : keys[keys.length - 1];
-  const selectedRaw = days.find((d) => dayKey(d.day) === selectedKey)?.day;
-  const dayLog = selectedRaw
-    ? await getLegendDayBattlelog(tag, selectedRaw).catch(() => null)
-    : null;
-
-  const basePath = `/player/${slug.toUpperCase().replace(/^#/, "")}/legends`;
-
-  if (days.length === 0 && seasons.length === 0) {
+  if (!history.ok) {
     return (
       <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">No Legend data for this player yet</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Ranked history could not be loaded</h2>
+        <p className="mt-2 max-w-prose text-ink-300">The stats service did not answer. Try again in a moment.</p>
+      </Panel>
+    );
+  }
+
+  const seasons = history.seasons;
+  if (seasons.length === 0) {
+    return (
+      <Panel className="rounded-2xl p-8">
+        <h2 className="text-xl font-semibold tracking-tight">No ranked seasons stored for this player</h2>
         <p className="mt-2 max-w-prose text-ink-300">
-          Legend history appears once the tracker has seen this player in Legend League. Check the
-          tag, or come back after their next Legend day.
+          Ranked seasons appear once the tracker has seen this player finish a tournament group.
         </p>
       </Panel>
     );
   }
 
-  const tide = runningTotal(days);
-  const net = days.map((d) => ({
-    day: dayKey(d.day),
-    attack: Math.abs(d.attackTrophies),
-    defense: -Math.abs(d.defenseTrophies),
-  }));
-  const netTotal = days.reduce((sum, d) => sum + d.trophies, 0);
+  const current = seasons.find((s) => s.seasonId === season) ?? seasons[0];
+
+  const [log, group, tier] = await Promise.allSettled([
+    getRankedBattlelog(tag, current.seasonId),
+    getRankedGroup(current.seasonId, current.leagueGroupId),
+    getLeagueTierStatistics(current.seasonId, current.league.id),
+  ]);
+  const battlelog = log.status === "fulfilled" ? log.value : null;
+  const members = group.status === "fulfilled" ? group.value.members : [];
+  const tierStats = tier.status === "fulfilled" ? tier.value : null;
+
+  const attackRate = winRate(current.attackWins, current.attackLosses);
+  const defenseRate = winRate(current.defenseWins, current.defenseLosses);
+  const standing = tierStats ? tierStanding(current.leagueTrophies, tierStats.trophyPercentiles) : null;
+  const chartData = [...seasons].reverse().map((s) => ({ season: s.seasonId, trophies: s.leagueTrophies }));
 
   return (
     <div className="grid gap-5 lg:grid-cols-12">
-      {days.length > 0 && (
-        <>
-          <Panel
-            title="Recent tide"
-            description="Running net trophies across your recent Legend days."
-            className="rounded-panel p-6 sm:p-8 lg:col-span-8"
-          >
-            {tide.length > 1 ? (
-              <TrophyTideChart data={tide} />
-            ) : (
-              <p className="text-sm text-ink-300">Two Legend days are needed to draw the tide.</p>
-            )}
-          </Panel>
+      <section className="rounded-panel bg-ink-800 p-6 sm:p-8 lg:col-span-8">
+        <div className="flex items-center gap-4">
+          <Image src={leagueTierIcon(current.league.name)} alt="" width={64} height={64} className="size-16" unoptimized />
+          <div>
+            <p className="text-sm text-ink-300">{current.seasonId}</p>
+            <h2 className="text-2xl font-semibold tracking-tight">{current.league.name}</h2>
+          </div>
+          <div className="ml-auto text-right">
+            <p className="font-mono text-4xl font-semibold tabular-nums text-gold-300">{formatInt(current.leagueTrophies)}</p>
+            <p className="text-sm text-ink-300">
+              placed <span className="font-mono tabular-nums text-ink-100">#{current.placement}</span> in group
+            </p>
+          </div>
+        </div>
+        <dl className="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-4">
+          {[
+            ["Attack record", `${current.attackWins}W ${current.attackLosses}L`],
+            ["Attack win rate", formatPercent(attackRate, 0)],
+            ["Stars per attack", (starsPerBattle(current.attackStars, current.attackWins, current.attackLosses) ?? NaN).toFixed(2).replace("NaN", "n/a")],
+            ["Defense record", `${current.defenseWins}W ${current.defenseLosses}L`],
+            ["Defense hold rate", formatPercent(defenseRate, 0)],
+            ["Stars conceded", String(current.defenseStars)],
+            ["Battle cap", String(current.maxBattles)],
+            ["Town Hall", current.townHallLevel ? String(current.townHallLevel) : "n/a"],
+          ].map(([label, value]) => (
+            <div key={label}>
+              <dt className="text-ink-500">{label}</dt>
+              <dd className="font-mono text-lg tabular-nums">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
-          <Panel title="Recent form" className="rounded-tile p-6 lg:col-span-4 lg:self-start">
-            <dl className="divide-y divide-ink-800">
+      <Panel title="Seasons" className="rounded-2xl p-5 lg:col-span-4 lg:row-span-2">
+        <SeasonTrail seasons={seasons} selected={current.seasonId} basePath={basePath} />
+      </Panel>
+
+      <Panel
+        title="Against the tier"
+        description={standing ?? "Tier percentiles are not available for this season."}
+        className="rounded-3xl p-6 sm:p-8 lg:col-span-8"
+      >
+        {tierStats ? (
+          <>
+            <PercentileLadder trophies={current.leagueTrophies} percentiles={tierStats.trophyPercentiles} />
+            <dl className="grid grid-cols-3 gap-4 border-t border-ink-800 pt-4 text-sm">
               {[
-                ["Net trophies", signed(netTotal)],
-                ["Legend days", String(days.length)],
-                ["Attacks tracked", String(summary.attacks)],
-                ["Triple rate", formatPercent(summary.tripleRate)],
-                ["No star rate", formatPercent(summary.zeroRate)],
-                ["Average destruction", formatPercent(summary.averageDestruction)],
-                ["Average attack time", formatDuration(summary.averageDuration)],
-              ].map(([label, value], i) => (
-                <div key={label} className="flex items-baseline justify-between py-2.5">
-                  <dt className="text-sm text-ink-300">{label}</dt>
-                  <dd
-                    className={`font-mono tabular-nums ${
-                      i === 0 ? "text-xl font-semibold text-gold-300" : "text-base"
-                    }`}
-                  >
-                    {value}
-                  </dd>
+                ["Groups in tier", formatInt(tierStats.groupCount)],
+                ["Players in tier", formatInt(tierStats.playerCount)],
+                ["Avg gap to first", formatInt(toNum(tierStats.groupCompetitiveness.averageFirstPlaceGap))],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <dt className="text-ink-500">{label}</dt>
+                  <dd className="font-mono text-base tabular-nums">{value}</dd>
                 </div>
               ))}
             </dl>
-          </Panel>
+          </>
+        ) : null}
+      </Panel>
 
-          <Panel
-            title="Attack strip"
-            description="One column per day, one dot per attack. Pick a day to inspect it."
-            className="rounded-3xl p-6 sm:p-8 lg:col-span-7"
-          >
-            <AttackStrip
-              days={keys}
-              attacksByDay={attacksByDay}
-              selectedDay={selectedKey}
-              basePath={basePath}
-            />
-          </Panel>
+      <Panel title="Season finishes" description="League trophies at the end of each ranked season." className="rounded-tile p-6 lg:col-span-5">
+        <RankedTrophyChart data={chartData} />
+      </Panel>
 
-          <Panel
-            title="Gains against losses"
-            description="Trophies won attacking, trophies lost defending."
-            className="rounded-2xl p-6 lg:col-span-5"
-          >
-            <AttackDefenseChart data={net} />
-          </Panel>
+      <Panel
+        title="Group standings"
+        description={members.length ? `${members.length} players in this tournament group.` : undefined}
+        className="rounded-2xl p-6 lg:col-span-7"
+      >
+        {members.length > 0 ? (
+          <Standings members={members} playerTag={tag} />
+        ) : (
+          <p className="text-sm text-ink-300">The group for this season could not be loaded.</p>
+        )}
+      </Panel>
 
-          {selectedKey && (
-            <Panel title={`Day ${selectedKey}`} className="rounded-3xl p-6 sm:p-8 lg:col-span-12">
-              {dayLog ? (
-                <DayInspector log={dayLog} />
-              ) : (
-                <p className="text-sm text-ink-300">Battle details for this day could not be loaded.</p>
-              )}
-            </Panel>
-          )}
-        </>
-      )}
-
-      {seasons.length > 0 && (
-        <>
-          <Panel
-            title="Season finishes"
-            description="Final trophies in each past Legend season."
-            className="rounded-tile p-6 lg:col-span-5"
-          >
-            <SeasonHistoryChart
-              data={[...seasons].reverse().map((s) => ({
-                season: s.season,
-                trophies: typeof s.trophies === "number" ? s.trophies : 0,
-              }))}
-            />
-          </Panel>
-          <Panel title="Season ledger" className="rounded-2xl p-6 lg:col-span-7">
-            <SeasonTable seasons={seasons.slice(0, 12)} />
-          </Panel>
-        </>
-      )}
+      <Panel
+        title={`Battles in ${current.seasonId}`}
+        description={
+          battlelog
+            ? `${battlelog.registeredAttacks} attacks and ${battlelog.registeredDefenses} defenses registered out of ${battlelog.maxBattles}.`
+            : undefined
+        }
+        className="rounded-3xl p-6 sm:p-8 lg:col-span-12"
+      >
+        {battlelog ? (
+          <DayInspector
+            log={{
+              tag: battlelog.tag,
+              day: battlelog.seasonId,
+              attackTrophies: battlelog.attackTrophies,
+              defenseTrophies: battlelog.defenseTrophies,
+              trophies: battlelog.trophies,
+              attacks: battlelog.attacks,
+              defenses: battlelog.defenses,
+            }}
+          />
+        ) : (
+          <p className="text-sm text-ink-300">Battle details for this season could not be loaded.</p>
+        )}
+      </Panel>
     </div>
   );
 }

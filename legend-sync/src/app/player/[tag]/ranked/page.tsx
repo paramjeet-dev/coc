@@ -20,6 +20,8 @@ import { rankedSeasons, starsPerBattle, tierStanding, winRate } from "@/lib/rank
 
 export const metadata: Metadata = { title: "Ranked seasons" };
 
+export const dynamic = "force-dynamic";
+
 export default async function PlayerRankedPage({
   params,
   searchParams,

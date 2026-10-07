@@ -59,7 +59,7 @@ export type OurRound = { number: number; war: OurWar | null };
 export function ourRounds(group: CwlGroup, tag: string): OurRound[] {
   return loadedRounds(group).map((round) => {
     const war = round.wars.find((w) => w.clan.tag === tag || w.opponent.tag === tag);
-    return { number: round.number, war: war ? orient(war, tag) : null };
+    return { number: round.number, war: war ? orient(war, tag, "cwl") : null };
   });
 }
 

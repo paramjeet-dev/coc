@@ -33,11 +33,22 @@ export function clanGamesClock(now: Date): EventClock {
   return { phase: "upcoming", target: new Date(Date.UTC(y, m + 1, 22, 8)) };
 }
 
-export function seasonClock(seasonEnd: string | null, now: Date): EventClock | null {
-  if (!seasonEnd) return null;
-  const target = new Date(seasonEnd);
-  if (Number.isNaN(target.getTime())) return null;
-  return target.getTime() > now.getTime() ? { phase: "live", target } : null;
+/** Seasons end on the last Monday of the month at 05:00 UTC. Used when the API value is missing. */
+function lastMondayEnd(year: number, month: number): number {
+  const lastDay = new Date(Date.UTC(year, month + 1, 0));
+  const back = (lastDay.getUTCDay() + 6) % 7;
+  return Date.UTC(year, month, lastDay.getUTCDate() - back, 5);
+}
+
+export function seasonClock(seasonEnd: string | null, now: Date): EventClock {
+  const parsed = seasonEnd ? new Date(seasonEnd) : null;
+  if (parsed && !Number.isNaN(parsed.getTime()) && parsed.getTime() > now.getTime()) {
+    return { phase: "live", target: parsed };
+  }
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const thisMonth = lastMondayEnd(y, m);
+  return { phase: "live", target: new Date(thisMonth > now.getTime() ? thisMonth : lastMondayEnd(y, m + 1)) };
 }
 
 export type Remaining = { days: number; hours: number; minutes: number; seconds: number };

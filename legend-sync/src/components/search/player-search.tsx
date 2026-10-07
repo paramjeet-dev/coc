@@ -57,8 +57,8 @@ export function PlayerSearch({ size = "md", placeholder = "Player name or tag" }
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (looksLikeTag(value)) router.push(`/player/${tagToSlug(value)}`);
-    else if (hits[0]) router.push(`/player/${tagToSlug(hits[0].tag)}`);
+    if (looksLikeTag(value)) router.push(`/player/${tagToSlug(value)}/legends`);
+    else if (hits[0]) router.push(`/player/${tagToSlug(hits[0].tag)}/legends`);
   }
 
   const large = size === "lg";
@@ -108,7 +108,7 @@ export function PlayerSearch({ size = "md", placeholder = "Player name or tag" }
             {hits.map((hit) => (
               <li key={hit.tag}>
                 <Link
-                  href={`/player/${tagToSlug(hit.tag)}`}
+                  href={`/player/${tagToSlug(hit.tag)}/legends`}
                   className="flex items-center justify-between gap-4 px-4 py-2.5 outline-none hover:bg-ink-800 focus-visible:bg-ink-800"
                 >
                   <span className="min-w-0">

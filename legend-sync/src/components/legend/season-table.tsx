@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { formatInt } from "@/lib/format";
 import type { LegendSeasonRecord } from "@/lib/api/types";
+import { seasonLabel } from "@/lib/legend";
 
 export function SeasonTable({ seasons }: { seasons: LegendSeasonRecord[] }) {
   return (
@@ -20,7 +21,7 @@ export function SeasonTable({ seasons }: { seasons: LegendSeasonRecord[] }) {
         <tbody className="divide-y divide-ink-800 font-mono tabular-nums">
           {seasons.map((s) => (
             <tr key={s.season}>
-              <th scope="row" className="py-2.5 pr-4 font-sans font-medium text-ink-100">{s.season}</th>
+              <th scope="row" className="py-2.5 pr-4 font-sans font-medium text-ink-100">{seasonLabel(s.season)}</th>
               <td className="py-2.5 pr-4 text-right text-gold-300">{formatInt(s.trophies)}</td>
               <td className="py-2.5 pr-4 text-right">{formatInt(s.rank)}</td>
               <td className="py-2.5 pr-4 text-right">{formatInt(s.attackWins)}</td>
