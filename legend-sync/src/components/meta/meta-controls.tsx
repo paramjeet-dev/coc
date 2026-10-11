@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/ui/link-pending";
 import { COHORTS, SORTS, type SortKey } from "@/lib/meta";
 import type { Cohort } from "@/lib/api/types";
 
@@ -31,7 +32,7 @@ export function MetaControls(props: Props) {
               className={pill(c.value === props.cohort)}
             >
               {c.label}
-            </Link>
+            <LinkPending /></Link>
           ))}
         </nav>
       </div>
@@ -48,7 +49,7 @@ export function MetaControls(props: Props) {
             }`}
           >
             {s.label}
-          </Link>
+          <LinkPending /></Link>
         ))}
       </nav>
     </div>

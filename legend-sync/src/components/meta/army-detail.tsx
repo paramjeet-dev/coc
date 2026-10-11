@@ -34,7 +34,7 @@ export function ArmyDetail({ family, timeline }: { family: ArmyFamily; timeline:
           ["Avg time", formatDuration(toNum(family.averageDuration) ?? 0)],
         ].map(([label, value]) => (
           <div key={label}>
-            <dt className="text-ink-500">{label}</dt>
+            <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
             <dd className="font-mono text-lg tabular-nums">{value}</dd>
           </div>
         ))}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/ui/link-pending";
 import { WAR_KINDS, type WarKind } from "@/lib/war";
 
 type Props = { basePath: string; active: WarKind; counts: Record<WarKind, number> };
@@ -19,7 +20,7 @@ export function WarKindTabs({ basePath, active, counts }: Props) {
         >
           {k.label}
           <span className="ml-1.5 font-mono text-xs tabular-nums opacity-70">{counts[k.value]}</span>
-        </Link>
+        <LinkPending /></Link>
       ))}
     </nav>
   );

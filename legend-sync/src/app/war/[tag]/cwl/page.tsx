@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { HeroPanel } from "@/components/ui/hero-panel";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -40,10 +42,9 @@ export default async function CwlPage({
     return (
       <div className="space-y-4">
         {back}
-        <Panel className="rounded-2xl p-8">
-          <h2 className="text-xl font-semibold tracking-tight">CWL history could not be loaded</h2>
-          <p className="mt-2 max-w-prose text-ink-300">The stats service did not answer. Try again in a moment.</p>
-        </Panel>
+        <EmptyState tone="error" title="CWL history could not be loaded">
+The stats service did not answer. Try again in a moment.
+</EmptyState>
       </div>
     );
   }
@@ -53,10 +54,9 @@ export default async function CwlPage({
     return (
       <div className="space-y-4">
         {back}
-        <Panel className="rounded-2xl p-8">
-          <h2 className="text-xl font-semibold tracking-tight">No CWL seasons stored for {tag}</h2>
-          <p className="mt-2 max-w-prose text-ink-300">League seasons appear once the tracker has seen this clan in a league group.</p>
-        </Panel>
+        <EmptyState title={<>No CWL seasons stored for {tag}</>}>
+League seasons appear once the tracker has seen this clan in a league group.
+</EmptyState>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default async function CwlPage({
       </header>
 
       <div className="grid gap-5 lg:grid-cols-12">
-        <section className="rounded-panel bg-ink-800 p-6 sm:p-8 lg:col-span-8">
+        <HeroPanel className="lg:col-span-8">
           <p className="text-sm text-ink-300">{current.season}{current.warLeague ? `, ${current.warLeague.name}` : ""}</p>
           <p className="mt-1 font-mono text-5xl font-semibold tabular-nums text-gold-300">{rank ? `#${rank}` : "n/a"}</p>
           <p className="text-sm text-ink-300">final placement in the group</p>
@@ -104,14 +104,14 @@ export default async function CwlPage({
               ["War size", current.warSize ? `${toNum(current.warSize)}v${toNum(current.warSize)}` : "n/a"],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="text-ink-500">{label}</dt>
+                <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
                 <dd className="font-mono text-lg tabular-nums">{value}</dd>
               </div>
             ))}
           </dl>
-        </section>
+        </HeroPanel>
 
-        <Panel title="Seasons" className="rounded-2xl p-5 lg:col-span-4 lg:row-span-2">
+        <Panel title="Seasons" className="lg:col-span-4 lg:row-span-2">
           <nav aria-label="CWL seasons">
             <ol className="max-h-[28rem] space-y-1 overflow-y-auto pr-1">
               {seasons.map((s) => {
@@ -140,7 +140,7 @@ export default async function CwlPage({
         </Panel>
 
         {!group ? (
-          <Panel className="rounded-2xl p-6 lg:col-span-8">
+          <Panel className="lg:col-span-8">
             <p className="text-sm text-ink-300">The league group for this season could not be loaded.</p>
           </Panel>
         ) : (
@@ -148,17 +148,17 @@ export default async function CwlPage({
             <Panel
               title="Group standings"
               description="Worked out from finished wars here: wins, then stars, then destruction."
-              className="rounded-3xl p-6 lg:col-span-7"
+              className="lg:col-span-7"
             >
               <CwlStandings rows={standings} tag={tag} />
             </Panel>
-            <Panel title="Your rounds" className="rounded-2xl p-5 lg:col-span-5">
+            <Panel title="Your rounds" className="lg:col-span-5">
               <RoundList rounds={rounds} basePath={basePath} season={current.season} selected={roundNumber} />
             </Panel>
             {selected && (
               <Panel
                 title={`Round ${roundNumber}: ${selected.us.name} vs ${selected.them.name}`}
-                className="rounded-3xl p-6 sm:p-8 lg:col-span-12"
+                className="lg:col-span-12"
               >
                 <WarDetail item={selected} />
               </Panel>
@@ -167,7 +167,7 @@ export default async function CwlPage({
               <Panel
                 title="Player totals"
                 description={`Across ${finished.length} finished round${finished.length === 1 ? "" : "s"}, best average stars first.`}
-                className="rounded-2xl p-6 lg:col-span-12"
+                className="lg:col-span-12"
               >
                 <PlayerTotals rows={totals} />
               </Panel>

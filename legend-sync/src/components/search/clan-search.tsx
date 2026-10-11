@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { looksLikeTag, tagToSlug } from "@/lib/api/tags";
+import { Search } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import type { Num } from "@/lib/api/types";
+import { RESULT_LIST, SearchStatus } from "./search-parts";
 
 type Hit = { name: string; tag: string; clanLevel: Num; members: Num };
 
@@ -57,29 +60,35 @@ export function ClanSearch({
     <div className="relative w-full max-w-xl">
       <form onSubmit={submit} role="search" className="flex items-center gap-2">
         <label htmlFor={`${listId}-input`} className="sr-only">Search clans</label>
-        <input
-          id={`${listId}-input`}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder={placeholder}
-          autoComplete="off"
-          spellCheck={false}
-          aria-controls={listId}
-          className="h-14 w-full rounded-full border border-ink-700 bg-ink-900 px-6 text-lg text-ink-100 placeholder:text-ink-500 outline-none transition-colors focus-visible:border-gold-400 focus-visible:ring-2 focus-visible:ring-gold-400/40 motion-reduce:transition-none"
-        />
+        <div className="relative w-full">
+          <Search aria-hidden className="pointer-events-none absolute left-5 top-1/2 size-5 -translate-y-1/2 text-ink-500" />
+          <input
+            id={`${listId}-input`}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={placeholder}
+            autoComplete="off"
+            spellCheck={false}
+            aria-controls={listId}
+            className="h-14 w-full rounded-2xl border border-ink-700 bg-ink-900 pl-13 pr-5 text-lg text-ink-100 placeholder:text-ink-500 outline-none transition-colors focus-visible:border-gold-400 focus-visible:ring-2 focus-visible:ring-gold-400/30 motion-reduce:transition-none"
+          />
+          {status === "loading" && (
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+              <Spinner size="sm" label="Searching clans" />
+            </span>
+          )}
+        </div>
         <button
           type="submit"
-          className="h-14 shrink-0 rounded-full bg-gold-400 px-7 text-base font-semibold text-ink-950 outline-none transition-colors hover:bg-gold-300 focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 motion-reduce:transition-none"
+          className="h-14 shrink-0 rounded-2xl bg-gold-400 px-7 text-base font-semibold text-ink-950 outline-none transition-colors hover:bg-gold-300 focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 motion-reduce:transition-none"
         >
           Find clan
         </button>
       </form>
-      <div id={listId} aria-live="polite" className="mt-2">
-        {status === "loading" && <p className="px-2 text-sm text-ink-500">Searching clans</p>}
-        {status === "empty" && <p className="px-2 text-sm text-ink-500">No clans match that name. Try the clan tag, for example #2PP.</p>}
-        {status === "error" && <p className="px-2 text-sm text-ember-400">Search is unavailable right now. Paste a clan tag to open it directly.</p>}
+      <div id={listId} aria-live="polite">
+        <SearchStatus status={status} noun="clan" floating />
         {hits.length > 0 && (
-          <ul className="absolute left-0 right-0 z-20 overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl shadow-black/40">
+          <ul className={RESULT_LIST}>
             {hits.map((hit) => (
               <li key={hit.tag}>
                 <Link

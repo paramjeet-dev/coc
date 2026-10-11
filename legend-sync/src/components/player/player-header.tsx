@@ -26,13 +26,13 @@ export function PlayerHeader({ tag, latest, profile, rankings }: Props) {
   if (profile) facts.push(["Town Hall", formatInt(profile.townHallLevel)]);
 
   return (
-    <div className="relative overflow-hidden rounded-panel bg-ink-900 ring-1 ring-ink-800">
+    <div className="relative overflow-hidden rounded-2xl bg-ink-900 ring-1 ring-gold-400/20">
       <Image
         src={legendLandscape()}
         alt=""
         fill
         sizes="(min-width: 1280px) 1280px, 100vw"
-        className="object-cover object-center opacity-30"
+        className="object-cover object-center opacity-25"
       />
       <div
         aria-hidden
@@ -51,9 +51,19 @@ export function PlayerHeader({ tag, latest, profile, rankings }: Props) {
             />
           )}
           <div className="min-w-0">
-            <h1 className="truncate text-4xl font-semibold tracking-tight">{name}</h1>
+            <p className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.14em]">
+              {leagueName && (
+                <span className="rounded-full bg-gold-400 px-2.5 py-1 font-semibold text-ink-950">{leagueName}</span>
+              )}
+              {profile && (
+                <span className="rounded-full bg-ink-800/80 px-2.5 py-1 text-ink-300 ring-1 ring-ink-700">
+                  TH{formatInt(profile.townHallLevel)}
+                </span>
+              )}
+            </p>
+            <h1 className="truncate text-3xl font-semibold tracking-tight sm:text-4xl">{name}</h1>
             <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-300">
-              <span className="font-mono tabular-nums text-ink-100">{tag}</span>
+              <span className="font-mono tabular-nums text-tide-400">{tag}</span>
               {clanName && (
                 <span className="flex items-center gap-1.5">
                   {badge && <Image src={badge} alt="" width={20} height={20} className="size-5" />}
@@ -67,8 +77,8 @@ export function PlayerHeader({ tag, latest, profile, rankings }: Props) {
         <dl className="flex flex-wrap items-end gap-x-8 gap-y-3">
           {home?.trophies != null && (
             <div>
-              <dt className="text-sm text-ink-300">Trophies</dt>
-              <dd className="flex items-center gap-2 font-mono text-4xl font-semibold tabular-nums text-gold-300">
+              <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">Trophies</dt>
+              <dd className="flex items-center gap-2 font-mono text-5xl font-semibold tabular-nums text-gold-300">
                 <Image src={leagueTierIcon(leagueName)} alt="" width={36} height={36} className="size-9" />
                 {formatInt(home.trophies)}
               </dd>
@@ -76,7 +86,7 @@ export function PlayerHeader({ tag, latest, profile, rankings }: Props) {
           )}
           {facts.map(([label, value]) => (
             <div key={label}>
-              <dt className="text-sm text-ink-300">{label}</dt>
+              <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
               <dd className="font-mono text-xl tabular-nums">{value}</dd>
             </div>
           ))}

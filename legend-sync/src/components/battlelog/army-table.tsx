@@ -33,7 +33,7 @@ export function ArmyTable({ armies }: { armies: ArmyUsage[] }) {
               ["Avg time", formatDuration(army.averageDuration)],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="text-ink-500">{label}</dt>
+                <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
                 <dd className="font-mono tabular-nums text-ink-100">{value}</dd>
               </div>
             ))}

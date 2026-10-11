@@ -32,7 +32,7 @@ export function TrophyHistogram({ buckets }: { buckets: LegendTrophyBucket[] }) 
 
   if (bars.length === 0) {
     return (
-      <p className="rounded-tile bg-ink-800 p-6 text-sm text-ink-300">
+      <p className="rounded-xl bg-ink-850 p-6 text-sm text-ink-300 ring-1 ring-ink-800">
         The trophy spread is not available yet. It refreshes every few minutes.
       </p>
     );
@@ -49,7 +49,7 @@ export function TrophyHistogram({ buckets }: { buckets: LegendTrophyBucket[] }) 
           <div
             key={bar.minimumTrophies}
             title={`${formatInt(bar.minimumTrophies)} to ${formatInt(bar.maximumTrophies)} trophies: ${formatInt(bar.playerCount)} players`}
-            className="min-h-[2px] flex-1 rounded-t-[3px] bg-gold-400/80 hover:bg-gold-300"
+            className="min-h-[2px] flex-1 rounded-t-[3px] bg-gold-400/70 transition-colors hover:bg-gold-300 motion-reduce:transition-none"
             style={{ height: `${Math.max(1, (bar.playerCount / peak) * 100)}%` }}
           />
         ))}

@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { HeroPanel } from "@/components/ui/hero-panel";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -32,10 +34,9 @@ export default async function ClanWarPage({
 
   if (!result.ok) {
     return (
-      <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">Wars could not be loaded</h2>
-        <p className="mt-2 max-w-prose text-ink-300">The stats service did not answer. Try again in a moment.</p>
-      </Panel>
+      <EmptyState tone="error" title="Wars could not be loaded">
+The stats service did not answer. Try again in a moment.
+</EmptyState>
     );
   }
 
@@ -44,10 +45,9 @@ export default async function ClanWarPage({
     return (
       <div className="space-y-4">
         <Link href="/war" className="text-sm text-tide-400 hover:underline">Back to war analytics</Link>
-        <Panel className="rounded-2xl p-8">
-          <h2 className="text-xl font-semibold tracking-tight">No finished wars stored for {tag}</h2>
-          <p className="mt-2 max-w-prose text-ink-300">Wars are stored once the tracker has watched them end. Check the tag, or try again after the clan's next war.</p>
-        </Panel>
+        <EmptyState title={<>No finished wars stored for {tag}</>}>
+Wars are stored once the tracker has watched them end. Check the tag, or try again after the clan's next war.
+</EmptyState>
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default async function ClanWarPage({
       </header>
 
       <section className="grid gap-5 lg:grid-cols-12">
-        <div className="rounded-panel bg-ink-800 p-6 sm:p-8 lg:col-span-5">
+        <HeroPanel className="lg:col-span-5">
           <p className="text-sm text-ink-300">Record over {record.played} wars</p>
           <p className="mt-1 font-mono text-5xl font-semibold tabular-nums text-gold-300">
             {record.wins}-{record.losses}
@@ -87,20 +87,20 @@ export default async function ClanWarPage({
               ["Missed attacks", `${record.missedAttacks} of ${record.attacksAvailable}`],
             ].map(([label, value]) => (
               <div key={label}>
-                <dt className="text-ink-500">{label}</dt>
+                <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
                 <dd className="font-mono text-lg tabular-nums">{value}</dd>
               </div>
             ))}
           </dl>
-        </div>
+        </HeroPanel>
 
-        <Panel title="Recent wars" className="rounded-2xl p-5 lg:col-span-7">
+        <Panel title="Recent wars" className="lg:col-span-7">
           <WarList wars={wars} basePath={basePath} selected={current.slug} />
         </Panel>
 
         <Panel
           title={`${current.us.name} vs ${current.them.name}`}
-          className="rounded-3xl p-6 sm:p-8 lg:col-span-12"
+          className="lg:col-span-12"
         >
           <WarDetail item={current} />
         </Panel>
@@ -108,7 +108,7 @@ export default async function ClanWarPage({
         <Panel
           title="Player totals"
           description={`Across the ${wars.length} wars above, best average stars first.`}
-          className="rounded-2xl p-6 lg:col-span-12"
+          className="lg:col-span-12"
         >
           <PlayerTotals rows={totals} />
         </Panel>

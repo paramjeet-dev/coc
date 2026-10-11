@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/ui/link-pending";
 import { MODE_FILTERS, RANGE_OPTIONS, type ModeFilter, type RangeDays } from "@/lib/battlelog";
 
 type Props = { basePath: string; mode: ModeFilter; range: RangeDays; counts: Record<ModeFilter, number> };
@@ -27,7 +28,7 @@ export function Filters({ basePath, mode, range, counts }: Props) {
               <span className={`ml-1.5 font-mono text-xs tabular-nums ${active ? "text-ink-800" : "text-ink-500"}`}>
                 {counts[m.value]}
               </span>
-            </Link>
+            <LinkPending /></Link>
           );
         })}
       </nav>
@@ -44,7 +45,7 @@ export function Filters({ basePath, mode, range, counts }: Props) {
             }`}
           >
             {r}d
-          </Link>
+          <LinkPending /></Link>
         ))}
       </nav>
     </div>

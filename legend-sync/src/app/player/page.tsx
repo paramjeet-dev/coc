@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Metadata } from "next";
 import { AttackDefenseChart } from "@/components/legend/attack-defense-chart";
 import { AttackStrip } from "@/components/legend/attack-strip";
@@ -77,13 +78,10 @@ export default async function PlayerLegendsPage({
 
   if (days.length === 0 && seasons.length === 0) {
     return (
-      <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">No Legend data for this player yet</h2>
-        <p className="mt-2 max-w-prose text-ink-300">
-          Legend history appears once the tracker has seen this player in Legend League. Check the
+      <EmptyState title="No Legend data for this player yet">
+Legend history appears once the tracker has seen this player in Legend League. Check the
           tag, or come back after their next Legend day.
-        </p>
-      </Panel>
+</EmptyState>
     );
   }
 
@@ -102,7 +100,7 @@ export default async function PlayerLegendsPage({
           <Panel
             title="Recent tide"
             description="Running net trophies across your recent Legend days."
-            className="rounded-panel p-6 sm:p-8 lg:col-span-8"
+            className="lg:col-span-8"
           >
             {tide.length > 1 ? (
               <TrophyTideChart data={tide} />
@@ -111,7 +109,7 @@ export default async function PlayerLegendsPage({
             )}
           </Panel>
 
-          <Panel title="Recent form" className="rounded-tile p-6 lg:col-span-4 lg:self-start">
+          <Panel title="Recent form" className="lg:col-span-4 lg:self-start">
             <dl className="divide-y divide-ink-800">
               {[
                 ["Net trophies", signed(netTotal)],
@@ -139,7 +137,7 @@ export default async function PlayerLegendsPage({
           <Panel
             title="Attack strip"
             description="One column per day, one dot per attack. Pick a day to inspect it."
-            className="rounded-3xl p-6 sm:p-8 lg:col-span-7"
+            className="lg:col-span-7"
           >
             <AttackStrip
               days={keys}
@@ -152,13 +150,13 @@ export default async function PlayerLegendsPage({
           <Panel
             title="Gains against losses"
             description="Trophies won attacking, trophies lost defending."
-            className="rounded-2xl p-6 lg:col-span-5"
+            className="lg:col-span-5"
           >
             <AttackDefenseChart data={net} />
           </Panel>
 
           {selectedKey && (
-            <Panel title={`Day ${selectedKey}`} className="rounded-3xl p-6 sm:p-8 lg:col-span-12">
+            <Panel title={`Day ${selectedKey}`} className="lg:col-span-12">
               {dayLog ? (
                 <DayInspector log={dayLog} />
               ) : (
@@ -174,7 +172,7 @@ export default async function PlayerLegendsPage({
           <Panel
             title="Season finishes"
             description="Final trophies in each past Legend season."
-            className="rounded-tile p-6 lg:col-span-5"
+            className="lg:col-span-5"
           >
             <SeasonHistoryChart
               data={[...seasons].reverse().map((s) => ({
@@ -183,7 +181,7 @@ export default async function PlayerLegendsPage({
               }))}
             />
           </Panel>
-          <Panel title="Season ledger" className="rounded-2xl p-6 lg:col-span-7">
+          <Panel title="Season ledger" className="lg:col-span-7">
             <SeasonTable seasons={seasons.slice(0, 12)} />
           </Panel>
         </>

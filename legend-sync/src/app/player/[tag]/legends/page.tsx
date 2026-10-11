@@ -5,7 +5,9 @@ import { DayInspector } from "@/components/legend/day-inspector";
 import { SeasonHistoryChart } from "@/components/legend/season-history-chart";
 import { SeasonTable } from "@/components/legend/season-table";
 import { TrophyTideChart } from "@/components/legend/trophy-tide-chart";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Panel } from "@/components/ui/panel";
+import { StatGrid } from "@/components/ui/stat";
 import {
   getBattlelogHistory,
   getLegendDayBattlelog,
@@ -79,13 +81,10 @@ export default async function PlayerLegendsPage({
 
   if (days.length === 0 && seasons.length === 0) {
     return (
-      <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">No Legend data for this player yet</h2>
-        <p className="mt-2 max-w-prose text-ink-300">
-          Legend history appears once the tracker has seen this player in Legend League. Check the
-          tag, or come back after their next Legend day.
-        </p>
-      </Panel>
+      <EmptyState title="No Legend data for this player yet">
+        Legend history appears once the tracker has seen this player in Legend League. Check the
+        tag, or come back after their next Legend day.
+      </EmptyState>
     );
   }
 
@@ -103,8 +102,9 @@ export default async function PlayerLegendsPage({
         <>
           <Panel
             title="Recent tide"
+            eyebrow="Trajectory"
             description="Running net trophies across your recent Legend days."
-            className="rounded-panel p-6 sm:p-8 lg:col-span-8"
+            className="lg:col-span-8"
           >
             {tide.length > 1 ? (
               <TrophyTideChart data={tide} />
@@ -113,35 +113,26 @@ export default async function PlayerLegendsPage({
             )}
           </Panel>
 
-          <Panel title="Recent form" className="rounded-tile p-6 lg:col-span-4 lg:self-start">
-            <dl className="divide-y divide-ink-800">
-              {[
-                ["Net trophies", signed(netTotal)],
-                ["Legend days", String(days.length)],
-                ["Attacks tracked", String(summary.attacks)],
-                ["Triple rate", formatPercent(summary.tripleRate)],
-                ["No star rate", formatPercent(summary.zeroRate)],
-                ["Average destruction", formatPercent(summary.averageDestruction)],
-                ["Average attack time", formatDuration(summary.averageDuration)],
-              ].map(([label, value], i) => (
-                <div key={label} className="flex items-baseline justify-between py-2.5">
-                  <dt className="text-sm text-ink-300">{label}</dt>
-                  <dd
-                    className={`font-mono tabular-nums ${
-                      i === 0 ? "text-xl font-semibold text-gold-300" : "text-base"
-                    }`}
-                  >
-                    {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+          <Panel title="Recent form" eyebrow="Form" className="lg:col-span-4 lg:self-start">
+            <StatGrid
+              size="lg"
+              className="grid-cols-2 sm:grid-cols-2"
+              items={[
+                { label: "Net trophies", value: signed(netTotal), tone: netTotal >= 0 ? "gold" : "ember" },
+                { label: "Legend days", value: String(days.length) },
+                { label: "Attacks tracked", value: String(summary.attacks) },
+                { label: "Triple rate", value: formatPercent(summary.tripleRate), tone: "tide" },
+                { label: "No star rate", value: formatPercent(summary.zeroRate) },
+                { label: "Avg destruction", value: formatPercent(summary.averageDestruction) },
+                { label: "Avg attack time", value: formatDuration(summary.averageDuration) },
+              ]}
+            />
           </Panel>
 
           <Panel
             title="Attack strip"
             description="One column per day, one dot per attack. Pick a day to inspect it."
-            className="rounded-3xl p-6 sm:p-8 lg:col-span-7"
+            className="lg:col-span-7"
           >
             <AttackStrip
               days={keys}
@@ -154,13 +145,13 @@ export default async function PlayerLegendsPage({
           <Panel
             title="Gains against losses"
             description="Trophies won attacking, trophies lost defending."
-            className="rounded-2xl p-6 lg:col-span-5"
+            className="lg:col-span-5"
           >
             <AttackDefenseChart data={net} />
           </Panel>
 
           {selectedKey && (
-            <Panel title={`Day ${selectedKey}`} className="rounded-3xl p-6 sm:p-8 lg:col-span-12">
+            <Panel title={`Day ${selectedKey}`} className="lg:col-span-12">
               {dayLog ? (
                 <DayInspector log={dayLog} />
               ) : (
@@ -176,7 +167,7 @@ export default async function PlayerLegendsPage({
           <Panel
             title="Season finishes"
             description="Final trophies in each past Legend season."
-            className="rounded-tile p-6 lg:col-span-5"
+            className="lg:col-span-5"
           >
             <SeasonHistoryChart
               data={[...seasons].reverse().map((s) => ({
@@ -185,7 +176,7 @@ export default async function PlayerLegendsPage({
               }))}
             />
           </Panel>
-          <Panel title="Season ledger" className="rounded-2xl p-6 lg:col-span-7">
+          <Panel title="Season ledger" className="lg:col-span-7">
             <SeasonTable seasons={seasons.slice(0, 12)} />
           </Panel>
         </>

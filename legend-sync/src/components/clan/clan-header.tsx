@@ -29,7 +29,7 @@ export function ClanHeader({ profile, tag }: { profile: ClanProfile | null; tag:
           ["War league", profile.warLeague?.name ?? "n/a"],
         ].map(([label, value]) => (
           <div key={label}>
-            <dt className="text-ink-500">{label}</dt>
+            <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
             <dd className="font-mono text-base tabular-nums">{value}</dd>
           </div>
         ))}

@@ -19,20 +19,24 @@ export function LiveLedger({ counts }: { counts: GlobalCounts | null }) {
     );
   }
 
+  const [lead, ...rest] = ROWS;
+  if (!lead) return null;
   return (
-    <dl className="divide-y divide-ink-800">
-      {ROWS.map((row, index) => (
-        <div key={row.key} className="flex items-baseline justify-between gap-4 py-3">
-          <dt className="text-sm text-ink-300">{row.label}</dt>
-          <dd
-            className={`font-mono tabular-nums ${
-              index === 0 ? "text-2xl font-semibold text-gold-300" : "text-lg text-ink-100"
-            }`}
-          >
-            {formatCompact(counts[row.key])}
-          </dd>
-        </div>
-      ))}
-    </dl>
+    <div>
+      <div className="rounded-xl bg-ink-850 p-4 ring-1 ring-gold-400/20">
+        <p className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{lead.label}</p>
+        <p className="mt-1 font-mono text-4xl font-semibold tabular-nums text-gold-300">
+          {formatCompact(counts[lead.key])}
+        </p>
+      </div>
+      <dl className="mt-2 divide-y divide-ink-800">
+        {rest.map((row) => (
+          <div key={row.key} className="flex items-baseline justify-between gap-4 py-2.5">
+            <dt className="text-sm text-ink-300">{row.label}</dt>
+            <dd className="font-mono text-base tabular-nums text-ink-100">{formatCompact(counts[row.key])}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }

@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { HeroPanel } from "@/components/ui/hero-panel";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { DayInspector } from "@/components/legend/day-inspector";
@@ -41,22 +43,18 @@ export default async function PlayerRankedPage({
 
   if (!history.ok) {
     return (
-      <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">Ranked history could not be loaded</h2>
-        <p className="mt-2 max-w-prose text-ink-300">The stats service did not answer. Try again in a moment.</p>
-      </Panel>
+      <EmptyState tone="error" title="Ranked history could not be loaded">
+The stats service did not answer. Try again in a moment.
+</EmptyState>
     );
   }
 
   const seasons = history.seasons;
   if (seasons.length === 0) {
     return (
-      <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">No ranked seasons stored for this player</h2>
-        <p className="mt-2 max-w-prose text-ink-300">
-          Ranked seasons appear once the tracker has seen this player finish a tournament group.
-        </p>
-      </Panel>
+      <EmptyState title="No ranked seasons stored for this player">
+Ranked seasons appear once the tracker has seen this player finish a tournament group.
+</EmptyState>
     );
   }
 
@@ -78,7 +76,7 @@ export default async function PlayerRankedPage({
 
   return (
     <div className="grid gap-5 lg:grid-cols-12">
-      <section className="rounded-panel bg-ink-800 p-6 sm:p-8 lg:col-span-8">
+      <HeroPanel className="lg:col-span-8">
         <div className="flex items-center gap-4">
           <Image src={leagueTierIcon(current.league.name)} alt="" width={64} height={64} className="size-16" unoptimized />
           <div>
@@ -104,21 +102,21 @@ export default async function PlayerRankedPage({
             ["Town Hall", current.townHallLevel ? String(current.townHallLevel) : "n/a"],
           ].map(([label, value]) => (
             <div key={label}>
-              <dt className="text-ink-500">{label}</dt>
+              <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
               <dd className="font-mono text-lg tabular-nums">{value}</dd>
             </div>
           ))}
         </dl>
-      </section>
+      </HeroPanel>
 
-      <Panel title="Seasons" className="rounded-2xl p-5 lg:col-span-4 lg:row-span-2">
+      <Panel title="Seasons" className="lg:col-span-4 lg:row-span-2">
         <SeasonTrail seasons={seasons} selected={current.seasonId} basePath={basePath} />
       </Panel>
 
       <Panel
         title="Against the tier"
         description={standing ?? "Tier percentiles are not available for this season."}
-        className="rounded-3xl p-6 sm:p-8 lg:col-span-8"
+        className="lg:col-span-8"
       >
         {tierStats ? (
           <>
@@ -130,7 +128,7 @@ export default async function PlayerRankedPage({
                 ["Avg gap to first", formatInt(toNum(tierStats.groupCompetitiveness.averageFirstPlaceGap))],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-ink-500">{label}</dt>
+                  <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
                   <dd className="font-mono text-base tabular-nums">{value}</dd>
                 </div>
               ))}
@@ -139,14 +137,14 @@ export default async function PlayerRankedPage({
         ) : null}
       </Panel>
 
-      <Panel title="Season finishes" description="League trophies at the end of each ranked season." className="rounded-tile p-6 lg:col-span-5">
+      <Panel title="Season finishes" description="League trophies at the end of each ranked season." className="lg:col-span-5">
         <RankedTrophyChart data={chartData} />
       </Panel>
 
       <Panel
         title="Group standings"
         description={members.length ? `${members.length} players in this tournament group.` : undefined}
-        className="rounded-2xl p-6 lg:col-span-7"
+        className="lg:col-span-7"
       >
         {members.length > 0 ? (
           <Standings members={members} playerTag={tag} />
@@ -162,7 +160,7 @@ export default async function PlayerRankedPage({
             ? `${battlelog.registeredAttacks} attacks and ${battlelog.registeredDefenses} defenses registered out of ${battlelog.maxBattles}.`
             : undefined
         }
-        className="rounded-3xl p-6 sm:p-8 lg:col-span-12"
+        className="lg:col-span-12"
       >
         {battlelog ? (
           <DayInspector

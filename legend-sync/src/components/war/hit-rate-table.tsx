@@ -8,7 +8,7 @@ export function HitRateTable({ rows }: { rows: ThHitRate[] }) {
   return (
     <table className="w-full text-sm">
       <caption className="sr-only">War hit rates by Town Hall</caption>
-      <thead className="text-left text-xs text-ink-500">
+      <thead className="text-left font-mono text-[0.68rem] uppercase tracking-[0.12em] text-ink-500">
         <tr className="border-b border-ink-800">
           <th scope="col" className="py-2 pr-3 font-medium">Town Hall</th>
           <th scope="col" className="py-2 pr-3 font-medium">Triple rate</th>

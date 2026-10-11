@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { looksLikeTag, tagToSlug } from "@/lib/api/tags";
+import { Search } from "lucide-react";
 import type { Num } from "@/lib/api/types";
+import { Spinner } from "@/components/ui/spinner";
+import { RESULT_LIST, SearchStatus } from "./search-parts";
 
 type Hit = {
   name: string;
@@ -14,7 +17,7 @@ type Hit = {
 };
 
 type Props = {
-  size?: "md" | "lg";
+  size?: "bar" | "md" | "lg";
   placeholder?: string;
 };
 
@@ -62,6 +65,8 @@ export function PlayerSearch({ size = "md", placeholder = "Player name or tag" }
   }
 
   const large = size === "lg";
+  const bar = size === "bar";
+  const submitLabel = "Find player";
 
   return (
     <div className="relative w-full">
@@ -69,42 +74,47 @@ export function PlayerSearch({ size = "md", placeholder = "Player name or tag" }
         <label htmlFor={`${listId}-input`} className="sr-only">
           Search players
         </label>
-        <input
-          id={`${listId}-input`}
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          placeholder={placeholder}
-          autoComplete="off"
-          spellCheck={false}
-          aria-controls={listId}
-          className={`w-full rounded-full border border-ink-700 bg-ink-900 text-ink-100 placeholder:text-ink-500 outline-none transition-colors focus-visible:border-gold-400 focus-visible:ring-2 focus-visible:ring-gold-400/40 motion-reduce:transition-none ${
-            large ? "h-14 px-6 text-lg" : "h-10 px-4 text-sm"
-          }`}
-        />
+        <div className="relative w-full">
+          {(bar || large) && (
+            <Search
+              aria-hidden
+              className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-ink-500 ${
+                large ? "left-5 size-5" : "left-3.5 size-4"
+              }`}
+            />
+          )}
+          <input
+            id={`${listId}-input`}
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            placeholder={placeholder}
+            autoComplete="off"
+            spellCheck={false}
+            aria-controls={listId}
+            className={`w-full border border-ink-700 bg-ink-900 text-ink-100 placeholder:text-ink-500 outline-none transition-colors focus-visible:border-gold-400 focus-visible:ring-2 focus-visible:ring-gold-400/30 motion-reduce:transition-none ${
+              large ? "h-14 rounded-2xl pl-13 pr-5 text-lg" : bar ? "h-10 rounded-xl pl-10 pr-3 text-sm" : "h-10 rounded-xl px-4 text-sm"
+            }`}
+          />
+          {status === "loading" && (
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+              <Spinner size="sm" label="Searching players" />
+            </span>
+          )}
+        </div>
         <button
           type="submit"
-          className={`shrink-0 rounded-full bg-gold-400 font-semibold text-ink-950 outline-none transition-colors hover:bg-gold-300 focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 motion-reduce:transition-none ${
-            large ? "h-14 px-7 text-base" : "h-10 px-5 text-sm"
+          className={`shrink-0 rounded-xl bg-gold-400 font-semibold text-ink-950 outline-none transition-colors hover:bg-gold-300 focus-visible:ring-2 focus-visible:ring-gold-300 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950 motion-reduce:transition-none ${
+            large ? "h-14 rounded-2xl px-7 text-base" : bar ? "sr-only" : "h-10 px-5 text-sm"
           }`}
         >
-          Find player
+          {submitLabel}
         </button>
       </form>
 
-      <div id={listId} aria-live="polite" className="mt-2">
-        {status === "loading" && <p className="px-2 text-sm text-ink-500">Searching players</p>}
-        {status === "empty" && (
-          <p className="px-2 text-sm text-ink-500">
-            No players match that name. Try the player tag, for example #2PP.
-          </p>
-        )}
-        {status === "error" && (
-          <p className="px-2 text-sm text-ember-400">
-            Search is unavailable right now. Paste a player tag to open a profile directly.
-          </p>
-        )}
+      <div id={listId} aria-live="polite">
+        <SearchStatus status={status} noun="player" floating={bar || large} />
         {hits.length > 0 && (
-          <ul className="absolute left-0 right-0 z-20 overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl shadow-black/40">
+          <ul className={RESULT_LIST}>
             {hits.map((hit) => (
               <li key={hit.tag}>
                 <Link

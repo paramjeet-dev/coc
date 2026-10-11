@@ -1,3 +1,5 @@
+import { EmptyState } from "@/components/ui/empty-state";
+import { HeroPanel } from "@/components/ui/hero-panel";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -67,16 +69,13 @@ export default async function ClanPage({
       <ClanHeader profile={profile} tag={tag} />
 
       {rows.length === 0 ? (
-        <Panel className="rounded-2xl p-8">
-          <h2 className="text-xl font-semibold tracking-tight">No Legend seasons tracked for this clan</h2>
-          <p className="mt-2 max-w-prose text-ink-300">
-            Seasons appear once the tracker has recorded Legend finishes for players while they were in this clan.
-          </p>
-        </Panel>
+        <EmptyState title="No Legend seasons tracked for this clan">
+Seasons appear once the tracker has recorded Legend finishes for players while they were in this clan.
+</EmptyState>
       ) : (
         <div className="grid gap-5 lg:grid-cols-12">
           {summary && (
-            <section className="rounded-panel bg-ink-800 p-6 sm:p-8 lg:col-span-8">
+            <HeroPanel className="lg:col-span-8">
               <p className="text-sm text-ink-300">{summary.season}</p>
               <p className="mt-1 font-mono text-5xl font-semibold tabular-nums text-gold-300">{summary.players}</p>
               <p className="text-sm text-ink-300">Legend players from this clan</p>
@@ -99,15 +98,15 @@ export default async function ClanPage({
                   ],
                 ].map(([label, value]) => (
                   <div key={label}>
-                    <dt className="text-ink-500">{label}</dt>
+                    <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
                     <dd className="font-mono text-lg tabular-nums">{value}</dd>
                   </div>
                 ))}
               </dl>
-            </section>
+            </HeroPanel>
           )}
 
-          <Panel title="Seasons" className="rounded-2xl p-5 lg:col-span-4 lg:row-span-2">
+          <Panel title="Seasons" className="lg:col-span-4 lg:row-span-2">
             <nav aria-label="Legend seasons">
               <ol className="max-h-[26rem] space-y-1 overflow-y-auto pr-1">
                 {seasonKeys.map((key) => {
@@ -135,20 +134,20 @@ export default async function ClanPage({
             </nav>
           </Panel>
 
-          <Panel title="Legend players per season" className="rounded-tile p-6 lg:col-span-8">
+          <Panel title="Legend players per season" className="lg:col-span-8">
             <SeasonBars data={chartData} />
           </Panel>
 
           <Panel
             title={`Roster in ${currentKey}`}
             description="Players ordered by final Legend trophies."
-            className="rounded-3xl p-6 sm:p-8 lg:col-span-12"
+            className="lg:col-span-12"
           >
             <SeasonRoster rows={currentRows} />
           </Panel>
 
           {topFinishes.length > 0 && (
-            <Panel title="Best finishes ever" description="Highest global ranks by players while in this clan." className="rounded-2xl p-6 lg:col-span-6">
+            <Panel title="Best finishes ever" description="Highest global ranks by players while in this clan." className="lg:col-span-6">
               <ol className="divide-y divide-ink-800">
                 {topFinishes.map((f) => (
                   <li key={`${f.season}-${f.tag}`} className="flex items-center justify-between gap-3 py-2.5 text-sm">
@@ -168,7 +167,7 @@ export default async function ClanPage({
             </Panel>
           )}
 
-          <Panel title="Standing and records" className="rounded-2xl p-6 lg:col-span-6">
+          <Panel title="Standing and records" className="lg:col-span-6">
             <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm">
               {[
                 ["Clan points", profile ? formatInt(profile.clanPoints) : "n/a"],
@@ -179,7 +178,7 @@ export default async function ClanPage({
                 ["Best streak ever", records?.warWinStreak ? formatInt(records.warWinStreak.value) : "n/a"],
               ].map(([label, value]) => (
                 <div key={label}>
-                  <dt className="text-ink-500">{label}</dt>
+                  <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
                   <dd className="font-mono text-lg tabular-nums">{value}</dd>
                 </div>
               ))}

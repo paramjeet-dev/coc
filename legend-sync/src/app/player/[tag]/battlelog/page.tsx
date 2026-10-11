@@ -1,3 +1,4 @@
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Metadata } from "next";
 import { ArmyTable } from "@/components/battlelog/army-table";
 import { BattleList } from "@/components/battlelog/battle-list";
@@ -46,12 +47,9 @@ export default async function PlayerBattlelogPage({
 
   if (!result.ok) {
     return (
-      <Panel className="rounded-2xl p-8">
-        <h2 className="text-xl font-semibold tracking-tight">The battle log could not be loaded</h2>
-        <p className="mt-2 max-w-prose text-ink-300">
-          The stats service did not answer. Try again in a moment.
-        </p>
-      </Panel>
+      <EmptyState tone="error" title="The battle log could not be loaded">
+The stats service did not answer. Try again in a moment.
+</EmptyState>
     );
   }
 
@@ -66,13 +64,10 @@ export default async function PlayerBattlelogPage({
     return (
       <div className="space-y-5">
         <Filters basePath={basePath} mode={mode} range={range} counts={counts} />
-        <Panel className="rounded-2xl p-8">
-          <h2 className="text-xl font-semibold tracking-tight">No stored attacks in this window</h2>
-          <p className="mt-2 max-w-prose text-ink-300">
-            Attacks are stored once the tracker sees them. Widen the window, or check back after the
+        <EmptyState title="No stored attacks in this window">
+Attacks are stored once the tracker sees them. Widen the window, or check back after the
             player's next attack.
-          </p>
-        </Panel>
+</EmptyState>
       </div>
     );
   }
@@ -90,7 +85,7 @@ export default async function PlayerBattlelogPage({
         <Panel
           title="Attacks"
           description={`Newest first, times in UTC.${visible.length > LIST_CAP ? ` Showing the latest ${LIST_CAP} of ${visible.length}.` : ""}`}
-          className="rounded-3xl p-6 sm:p-8 lg:col-span-8"
+          className="lg:col-span-8"
         >
           {groups.length > 0 ? (
             <BattleList groups={groups} />
@@ -102,7 +97,7 @@ export default async function PlayerBattlelogPage({
         <Panel
           title="Armies used"
           description="Grouped by share code, most used first."
-          className="rounded-tile p-6 lg:col-span-4 lg:self-start"
+          className="lg:col-span-4 lg:self-start"
         >
           <ArmyTable armies={armies} />
         </Panel>

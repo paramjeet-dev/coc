@@ -1,3 +1,4 @@
+import { HeroPanel } from "@/components/ui/hero-panel";
 import { ResourceAmount } from "@/components/ui/resource-amount";
 import { formatPercent } from "@/lib/format";
 import { formatDuration } from "@/lib/legend";
@@ -14,7 +15,7 @@ export function ModeSummaryBlock({ summaries }: { summaries: ModeSummary[] }) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-12">
-      <div className="rounded-3xl bg-ink-800 p-6 sm:p-8 lg:col-span-5">
+      <HeroPanel className="lg:col-span-5">
         <p className="text-sm text-ink-300">{LABEL[lead.mode]}, most active</p>
         <p className="mt-2 font-mono text-5xl font-semibold tabular-nums text-gold-300">{lead.attacks}</p>
         <p className="text-sm text-ink-300">attacks in this window</p>
@@ -25,7 +26,7 @@ export function ModeSummaryBlock({ summaries }: { summaries: ModeSummary[] }) {
             ["Avg time", formatDuration(lead.averageDuration)],
           ].map(([label, value]) => (
             <div key={label}>
-              <dt className="text-ink-500">{label}</dt>
+              <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
               <dd className="font-mono text-lg tabular-nums">{value}</dd>
             </div>
           ))}
@@ -38,11 +39,11 @@ export function ModeSummaryBlock({ summaries }: { summaries: ModeSummary[] }) {
             <ResourceAmount kind="darkElixir" amount={lead.darkElixir} />
           </p>
         )}
-      </div>
+      </HeroPanel>
       <div className="rounded-2xl bg-ink-900 p-6 ring-1 ring-ink-800 lg:col-span-7">
         <table className="w-full text-sm">
           <caption className="sr-only">Attack summary by mode</caption>
-          <thead className="text-left text-xs text-ink-500">
+          <thead className="text-left font-mono text-[0.68rem] uppercase tracking-[0.12em] text-ink-500">
             <tr>
               <th scope="col" className="pb-2 font-normal">Mode</th>
               <th scope="col" className="pb-2 text-right font-normal">Attacks</th>

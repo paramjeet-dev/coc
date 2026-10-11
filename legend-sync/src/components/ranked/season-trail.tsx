@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LinkPending } from "@/components/ui/link-pending";
 import Image from "next/image";
 import { leagueTierIcon } from "@/lib/assets";
 import { formatInt } from "@/lib/format";
@@ -32,7 +33,7 @@ export function SeasonTrail({ seasons, selected, basePath }: Props) {
                   <span className="block font-mono text-sm tabular-nums text-gold-300">{formatInt(s.leagueTrophies)}</span>
                   <span className="block font-mono text-xs tabular-nums text-ink-500">#{s.placement}</span>
                 </span>
-              </Link>
+              <LinkPending /></Link>
             </li>
           );
         })}
