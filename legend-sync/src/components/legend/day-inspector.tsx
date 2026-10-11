@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { CopyCode } from "@/components/battlelog/copy-code";
+import { tagToSlug } from "@/lib/api/tags";
 import { formatDuration, parseBattleTime } from "@/lib/legend";
 import { formatPercent } from "@/lib/format";
 import { toNum, type LegendBattle, type LegendDayBattlelog } from "@/lib/api/types";
@@ -12,28 +15,64 @@ function signed(n: number): string {
   return n > 0 ? `+${n}` : String(n);
 }
 
+function destructionTone(pct: number): string {
+  return pct >= 100 ? "bg-gold-400" : pct >= 50 ? "bg-tide-400" : "bg-ember-400/80";
+}
+
 function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "defense" }) {
+  const pct = Math.max(0, Math.min(100, toNum(battle.destructionPercentage) ?? 0));
+  const diff = battle.opponent.townHallLevel - battle.townHallLevel;
+  const matchup = diff === 0 ? "Same Town Hall" : diff > 0 ? `${diff} Town Hall higher` : `${-diff} Town Hall lower`;
+  const verb = side === "attack" ? "Attacked" : "Defended against";
+
   return (
-    <li className="grid grid-cols-[3.25rem_1fr_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[3.25rem_1fr_5rem_4.5rem_3.5rem_3.5rem]">
-      <span className="font-mono text-xs tabular-nums text-ink-500">{clock(battle.time)}</span>
-      <span className="min-w-0">
-        <span className="block truncate font-medium">{battle.opponent.name}</span>
-        <span className="block text-xs text-ink-500">Town Hall {battle.opponent.townHallLevel}</span>
-      </span>
-      <StarMarks stars={battle.stars} />
-      <span className="hidden font-mono tabular-nums text-ink-300 sm:block">
-        {formatPercent(toNum(battle.destructionPercentage), 0)}
-      </span>
-      <span className="hidden font-mono tabular-nums text-ink-300 sm:block">
-        {formatDuration(battle.duration)}
-      </span>
-      <span
-        className={`text-right font-mono tabular-nums ${
-          side === "attack" ? "text-tide-400" : "text-ember-400"
-        }`}
-      >
-        {signed(battle.trophies)}
-      </span>
+    <li className="py-3.5 text-sm">
+      <div className="flex items-start gap-3">
+        <span className="w-[3.25rem] shrink-0 pt-0.5 font-mono text-xs tabular-nums text-ink-500">
+          {clock(battle.time)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link
+              href={`/player/${tagToSlug(battle.opponent.tag)}/legends`}
+              className="truncate font-medium outline-none hover:text-gold-300 focus-visible:text-gold-300"
+            >
+              <span className="sr-only">{verb} </span>
+              {battle.opponent.name}
+            </Link>
+            <span className="rounded-md bg-ink-800 px-1.5 py-0.5 font-mono text-[0.68rem] text-ink-300 ring-1 ring-ink-700">
+              TH{battle.opponent.townHallLevel}
+            </span>
+          </div>
+          <p className="mt-0.5 truncate font-mono text-xs text-ink-500">
+            {battle.opponent.tag} <span aria-hidden>/</span> TH{battle.townHallLevel} vs TH
+            {battle.opponent.townHallLevel}, {matchup}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 text-right font-mono text-base font-semibold tabular-nums ${
+            side === "attack" ? "text-tide-400" : "text-ember-400"
+          }`}
+        >
+          {signed(battle.trophies)}
+        </span>
+      </div>
+
+      <div className="ml-[3.75rem] mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-300">
+        <StarMarks stars={battle.stars} />
+        <span className="flex items-center gap-2">
+          <span
+            role="img"
+            aria-label={`${pct.toFixed(0)} percent destruction`}
+            className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-800"
+          >
+            <span className={`block h-full rounded-full ${destructionTone(pct)}`} style={{ width: `${pct}%` }} />
+          </span>
+          <span className="font-mono tabular-nums">{formatPercent(pct, 0)}</span>
+        </span>
+        <span className="font-mono tabular-nums">Time {formatDuration(battle.duration)}</span>
+        {battle.shareCode && <CopyCode code={battle.shareCode} label="Copy army code" />}
+      </div>
     </li>
   );
 }

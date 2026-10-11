@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LinkPending } from "@/components/ui/link-pending";
+import { SortMenu } from "./sort-menu";
 import { COHORTS, SORTS, type SortKey } from "@/lib/meta";
 import type { Cohort } from "@/lib/api/types";
 
@@ -35,23 +36,11 @@ export function MetaControls(props: Props) {
             <LinkPending /></Link>
           ))}
         </nav>
+        <SortMenu
+          current={props.sort}
+          options={SORTS.map((o) => ({ value: o.value, label: o.label, href: href(props, { sort: o.value }) }))}
+        />
       </div>
-      <nav aria-label="Sort armies" className="flex flex-wrap items-center gap-1 text-sm">
-        <span className="mr-1 text-ink-500">Sort by</span>
-        {SORTS.map((s) => (
-          <Link
-            key={s.value}
-            href={href(props, { sort: s.value })}
-            scroll={false}
-            aria-current={s.value === props.sort ? "true" : undefined}
-            className={`rounded-md px-2.5 py-1 outline-none focus-visible:ring-2 focus-visible:ring-gold-400 ${
-              s.value === props.sort ? "bg-ink-700 text-ink-100" : "text-ink-300 hover:text-ink-100"
-            }`}
-          >
-            {s.label}
-          <LinkPending /></Link>
-        ))}
-      </nav>
     </div>
   );
 }

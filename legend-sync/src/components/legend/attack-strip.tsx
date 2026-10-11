@@ -48,6 +48,11 @@ export function AttackStrip({ days, attacksByDay, selectedDay, basePath }: Props
                         <span
                           key={i}
                           aria-hidden
+                          title={
+                            attack
+                              ? `Attack ${i + 1}: ${attack.stars} ${attack.stars === 1 ? "star" : "stars"}, ${Math.round(Number(attack.destructionPercentage))}%, ${attack.duration}s`
+                              : undefined
+                          }
                           className={`size-3 rounded-full ${
                             attack ? (PIP[attack.stars] ?? PIP[0]) : "ring-1 ring-ink-800"
                           }`}
