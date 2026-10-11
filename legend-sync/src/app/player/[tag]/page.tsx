@@ -50,15 +50,14 @@ The stats service did not answer. Try again in a moment.
   }
 
   const seasons = history.seasons;
-  if (seasons.length === 0) {
+  const current = seasons.find((s) => s.seasonId === season) ?? seasons[0];
+  if (!current) {
     return (
       <EmptyState title="No ranked seasons stored for this player">
 Ranked seasons appear once the tracker has seen this player finish a tournament group.
 </EmptyState>
     );
   }
-
-  const current = seasons.find((s) => s.seasonId === season) ?? seasons[0];
 
   const [log, group, tier] = await Promise.allSettled([
     getRankedBattlelog(tag, current.seasonId),

@@ -50,7 +50,8 @@ The stats service did not answer. Try again in a moment.
   }
 
   const seasons = seasonsR.seasons;
-  if (seasons.length === 0) {
+  const current = seasons.find((s) => s.season === q.season) ?? seasons[0];
+  if (!current) {
     return (
       <div className="space-y-4">
         {back}
@@ -61,7 +62,6 @@ League seasons appear once the tracker has seen this clan in a league group.
     );
   }
 
-  const current = seasons.find((s) => s.season === q.season) ?? seasons[0];
   const group = await getCwlGroup(tag, current.season).catch(() => null);
 
   const rounds = group ? ourRounds(group, tag) : [];

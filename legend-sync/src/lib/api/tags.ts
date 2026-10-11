@@ -1,8 +1,8 @@
 /** Clash tags use the alphabet 0289PYLQGRJCUV. Players often type the letter O for zero. */
 const TAG_BODY = /^[0289PYLQGRJCUV]{4,12}$/;
 
-export function normalizeTag(input: string): string {
-  const body = input.trim().toUpperCase().replace(/^#/, "").replace(/O/g, "0");
+export function normalizeTag(input: string | null | undefined): string {
+  const body = (input ?? "").trim().toUpperCase().replace(/^#/, "").replace(/O/g, "0");
   return `#${body}`;
 }
 
@@ -16,7 +16,7 @@ export function tagToApi(tag: string): string {
   return encodeURIComponent(normalizeTag(tag));
 }
 
-export function isValidTag(input: string): boolean {
+export function isValidTag(input: string | null | undefined): boolean {
   return TAG_BODY.test(normalizeTag(input).slice(1));
 }
 

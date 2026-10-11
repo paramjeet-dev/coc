@@ -62,10 +62,10 @@ export function EventCountdowns({ seasonEnd }: { seasonEnd: string | null }) {
   ];
 
   return (
-    <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+    <dl className="grid grid-cols-2 gap-3">
       {rows.map((row) => (
-        <div key={row.label}>
-          <dt className="flex items-center gap-2 text-sm text-ink-300">
+        <div key={row.label} className="rounded-xl bg-ink-850 p-3 ring-1 ring-ink-800">
+          <dt className="flex flex-wrap items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">
             {row.label}
             {row.clock && (
               <span

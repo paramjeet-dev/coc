@@ -12,10 +12,12 @@ export function PercentileLadder({
   percentiles: LeagueTierStatistics["trophyPercentiles"];
 }) {
   const points = STEPS.flatMap((k) => (percentiles[k] === null ? [] : [{ key: k, value: percentiles[k] as number }]));
-  if (points.length < 2) return null;
+  const first = points[0];
+  const last = points[points.length - 1];
+  if (!first || !last || points.length < 2) return null;
 
-  const min = Math.min(points[0].value, trophies);
-  const max = Math.max(points[points.length - 1].value, trophies);
+  const min = Math.min(first.value, trophies);
+  const max = Math.max(last.value, trophies);
   const span = Math.max(max - min, 1);
   const at = (v: number) => `${((v - min) / span) * 100}%`;
 
