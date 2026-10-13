@@ -1,5 +1,5 @@
 import { dayCandidates, stripVersionPrefix } from "../legend";
-import { ApiError, apiGet } from "./client";
+import { ApiError, apiGet, apiPost } from "./client";
 import { tagToApi } from "./tags";
 import type {
   BattleHistoryItem,
@@ -160,6 +160,18 @@ export const getLegendDays = (cohort: Cohort, after: string) =>
     `/v2/stats/legend/days?cohort=${cohort}&time[after]=${encodeURIComponent(after)}`,
     { revalidate: 600 },
   );
+
+/** Attack and defense counts for one player on one Legend day. */
+export async function getLegendDayCounts(
+  tag: string,
+  day: string,
+): Promise<{ attacks: number; defenses: number } | null> {
+  const res = await apiPost<{ items: Array<{ attacks: number; defenses: number }> }>("/v2/legends/days", {
+    day,
+    tags: [tag],
+  });
+  return res.items[0] ?? null;
+}
 
 /* ---------- Clans ---------- */
 

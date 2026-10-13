@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { formatInt } from "@/lib/format";
-import { legendLandscape, leagueTierIcon, townHallIcon } from "@/lib/assets";
+import { LeagueBadge } from "@/components/ui/league-badge";
+import { legendLandscape, townHallIcon } from "@/lib/assets";
 import type { LegendSeasonRecord, PlayerRankings, PlayerSearchHit } from "@/lib/api/types";
 
 type Props = {
@@ -52,9 +53,7 @@ export function PlayerHeader({ tag, latest, profile, rankings }: Props) {
           )}
           <div className="min-w-0">
             <p className="mb-2 flex flex-wrap items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.14em]">
-              {leagueName && (
-                <span className="rounded-full bg-gold-400 px-2.5 py-1 font-semibold text-ink-950">{leagueName}</span>
-              )}
+              {leagueName && <LeagueBadge name={leagueName} size={36} className="-ml-1" />}
               {profile && (
                 <span className="rounded-full bg-ink-800/80 px-2.5 py-1 text-ink-300 ring-1 ring-ink-700">
                   TH{formatInt(profile.townHallLevel)}
@@ -79,7 +78,6 @@ export function PlayerHeader({ tag, latest, profile, rankings }: Props) {
             <div>
               <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">Trophies</dt>
               <dd className="flex items-center gap-2 font-mono text-5xl font-semibold tabular-nums text-gold-300">
-                <Image src={leagueTierIcon(leagueName)} alt="" width={36} height={36} className="size-9" />
                 {formatInt(home.trophies)}
               </dd>
             </div>

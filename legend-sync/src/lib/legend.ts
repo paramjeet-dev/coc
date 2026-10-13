@@ -122,3 +122,44 @@ export function compareSeasons(a: string, b: string): number {
   const rank = (raw: string) => (/^v\d+-/.test(raw) ? 1 : 0);
   return rank(a) - rank(b) || dayKey(a).localeCompare(dayKey(b));
 }
+
+/** One Legend day with everything the performance chart and heatmap need. */
+export type PerformanceDay = {
+  day: string;
+  /** Running net trophies since the first tracked day. */
+  trophies: number;
+  net: number;
+  attackTrophies: number;
+  defenseTrophies: number;
+  attacks: number | null;
+  defenses: number | null;
+  /** Trophies gained per attack. Null when the attack count is unknown. */
+  attackAvg: number | null;
+  /** Trophies lost per defense, as a negative number. Null when the defense count is unknown. */
+  defenseAvg: number | null;
+};
+
+export function buildPerformance(
+  days: LegendSeriesDay[],
+  attackCounts: ReadonlyMap<string, number>,
+  defenseCounts: ReadonlyMap<string, number>,
+): PerformanceDay[] {
+  let total = 0;
+  return days.map((d) => {
+    const key = dayKey(d.day);
+    total += d.trophies;
+    const attacks = attackCounts.get(key) ?? null;
+    const defenses = defenseCounts.get(key) ?? null;
+    return {
+      day: key,
+      trophies: total,
+      net: d.trophies,
+      attackTrophies: Math.abs(d.attackTrophies),
+      defenseTrophies: -Math.abs(d.defenseTrophies),
+      attacks,
+      defenses,
+      attackAvg: attacks && attacks > 0 ? Math.abs(d.attackTrophies) / attacks : null,
+      defenseAvg: defenses && defenses > 0 ? -Math.abs(d.defenseTrophies) / defenses : null,
+    };
+  });
+}

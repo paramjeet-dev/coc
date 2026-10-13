@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { LinkPending } from "@/components/ui/link-pending";
-import Image from "next/image";
-import { leagueTierIcon } from "@/lib/assets";
+import { LeagueBadge } from "@/components/ui/league-badge";
 import { formatInt } from "@/lib/format";
 import type { RankedSeasonRecord } from "@/lib/api/types";
 
@@ -24,10 +23,9 @@ export function SeasonTrail({ seasons, selected, basePath }: Props) {
                   active ? "bg-ink-800 ring-1 ring-gold-600" : "hover:bg-ink-800/70"
                 }`}
               >
-                <Image src={leagueTierIcon(s.league.name)} alt="" width={32} height={32} className="size-8 shrink-0" unoptimized />
+                <LeagueBadge name={s.league.name} size={32} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-medium">{s.seasonId}</span>
-                  <span className="block truncate text-xs text-ink-500">{s.league.name}</span>
                 </span>
                 <span className="text-right">
                   <span className="block font-mono text-sm tabular-nums text-gold-300">{formatInt(s.leagueTrophies)}</span>

@@ -1,7 +1,6 @@
 import { EmptyState } from "@/components/ui/empty-state";
 import { HeroPanel } from "@/components/ui/hero-panel";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { DayInspector } from "@/components/legend/day-inspector";
 import { PercentileLadder } from "@/components/ranked/percentile-ladder";
 import { RankedTrophyChart } from "@/components/ranked/ranked-trophy-chart";
@@ -16,7 +15,7 @@ import {
 } from "@/lib/api/endpoints";
 import { normalizeTag } from "@/lib/api/tags";
 import { toNum } from "@/lib/api/types";
-import { leagueTierIcon } from "@/lib/assets";
+import { LeagueBadge } from "@/components/ui/league-badge";
 import { formatInt, formatPercent } from "@/lib/format";
 import { rankedSeasons, starsPerBattle, tierStanding, winRate } from "@/lib/ranked";
 
@@ -77,10 +76,10 @@ Ranked seasons appear once the tracker has seen this player finish a tournament 
     <div className="grid gap-5 lg:grid-cols-12">
       <HeroPanel className="lg:col-span-8">
         <div className="flex items-center gap-4">
-          <Image src={leagueTierIcon(current.league.name)} alt="" width={64} height={64} className="size-16" unoptimized />
+          <LeagueBadge name={current.league.name} size={72} />
           <div>
-            <p className="text-sm text-ink-300">{current.seasonId}</p>
-            <h2 className="text-2xl font-semibold tracking-tight">{current.league.name}</h2>
+            <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-gold-400">Ranked season</p>
+            <h2 className="font-mono text-2xl font-semibold tracking-tight">{current.seasonId}</h2>
           </div>
           <div className="ml-auto text-right">
             <p className="font-mono text-4xl font-semibold tabular-nums text-gold-300">{formatInt(current.leagueTrophies)}</p>

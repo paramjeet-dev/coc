@@ -20,7 +20,22 @@ export function townHallIcon(level: Num | null | undefined): string | null {
 }
 
 export function leagueTierIcon(name: string | null | undefined): string {
-  return assetUrl(`leagues/league-tier/${name ? assetSlug(name) : "legend_league"}.png`);
+  const slug = name ? assetSlug(name) : "legend_league";
+
+  const normalizedSlug = slug.replace(
+    /^legend_league_(i{1,3}|iv|v|vi{0,3}|ix|x)$/,
+    (_, roman: string) => {
+      const romanToNumber: Record<string, string> = {
+        i: "1",
+        ii: "2",
+        iii: "3"
+      };
+
+      return `legend_league_${romanToNumber[roman] ?? roman}`;
+    },
+  );
+
+  return assetUrl(`leagues/league-tier/${normalizedSlug}.png`);
 }
 
 export const heroIcon = (name: string) => assetUrl(`heroes/${assetSlug(name)}/icon.webp`);
@@ -52,8 +67,8 @@ export const UI_ICON_PATH: Record<UiIcon, string> = {
   gold: "resources/gold.webp",
   elixir: "resources/elixir.webp",
   dark_elixir: "resources/dark_elixir.webp",
-  defense: "ui/defense.png",
-  attack: "ui/attack.png",
+  defense: "icons/Icon_HV_Shield.png",
+  attack: "icons/Icon_HV_Attacks_No_Shield.png",
   trophy: "ui/trophy.png",
   clock: "ui/clock.png",
 };

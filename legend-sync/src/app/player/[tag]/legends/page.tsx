@@ -4,13 +4,15 @@ import { AttackStrip } from "@/components/legend/attack-strip";
 import { DayInspector } from "@/components/legend/day-inspector";
 import { SeasonHistoryChart } from "@/components/legend/season-history-chart";
 import { SeasonTable } from "@/components/legend/season-table";
-import { TrophyTideChart } from "@/components/legend/trophy-tide-chart";
+import { PerformanceHeatmap } from "@/components/legend/performance-heatmap";
+import { LegendPerformanceChart } from "@/components/legend/performance-chart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Panel } from "@/components/ui/panel";
 import { StatGrid } from "@/components/ui/stat";
 import {
   getBattlelogHistory,
   getLegendDayBattlelog,
+  getLegendDayCounts,
   getLegendHistory,
   getLegendSeries,
 } from "@/lib/api/endpoints";
@@ -20,8 +22,8 @@ import {
   compareSeasons,
   dayKey,
   formatDuration,
+  buildPerformance,
   groupLegendAttacks,
-  runningTotal,
   seasonLabel,
   summarizeAttacks,
   trimInactive,
@@ -88,7 +90,17 @@ export default async function PlayerLegendsPage({
     );
   }
 
-  const tide = runningTotal(days);
+  const counts = await Promise.allSettled(keys.map((k) => getLegendDayCounts(tag, k)));
+  const attackCounts = new Map<string, number>();
+  const defenseCounts = new Map<string, number>();
+  keys.forEach((k, i) => {
+    const r = counts[i];
+    const fromSummary = r?.status === "fulfilled" ? r.value : null;
+    const attacks = fromSummary?.attacks ?? attacksByDay.get(k)?.length;
+    if (attacks) attackCounts.set(k, attacks);
+    if (fromSummary?.defenses) defenseCounts.set(k, fromSummary.defenses);
+  });
+  const performance = buildPerformance(days, attackCounts, defenseCounts);
   const net = days.map((d) => ({
     day: dayKey(d.day),
     attack: Math.abs(d.attackTrophies),
@@ -101,15 +113,14 @@ export default async function PlayerLegendsPage({
       {days.length > 0 && (
         <>
           <Panel
-            title="Recent tide"
+            title="Legend performance"
             eyebrow="Trajectory"
-            description="Running net trophies across your recent Legend days."
             className="lg:col-span-8"
           >
-            {tide.length > 1 ? (
-              <TrophyTideChart data={tide} />
+            {performance.length > 1 ? (
+              <LegendPerformanceChart data={performance} />
             ) : (
-              <p className="text-sm text-ink-300">Two Legend days are needed to draw the tide.</p>
+              <p className="text-sm text-ink-300">Two Legend days are needed to draw the chart.</p>
             )}
           </Panel>
 
@@ -148,6 +159,15 @@ export default async function PlayerLegendsPage({
             className="lg:col-span-5"
           >
             <AttackDefenseChart data={net} />
+          </Panel>
+
+          <Panel
+            title="Performance heatmap"
+            eyebrow="Daily net"
+            description="One cell per Legend day, coloured by net trophies. Pick a day to inspect it."
+            className="lg:col-span-12"
+          >
+            <PerformanceHeatmap days={performance} selectedDay={selectedKey} basePath={basePath} />
           </Panel>
 
           {selectedKey && (
