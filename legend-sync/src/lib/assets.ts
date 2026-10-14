@@ -62,7 +62,7 @@ export type UiIcon =
   | "clock";
 
 export const UI_ICON_PATH: Record<UiIcon, string> = {
-  star: "ui/star.png",
+  star: "icons/Icon_BB_Star.png",
   star_empty: "ui/star_empty.png",
   gold: "resources/gold.webp",
   elixir: "resources/elixir.webp",
