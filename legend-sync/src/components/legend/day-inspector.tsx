@@ -15,14 +15,8 @@ function signed(n: number): string {
   return n > 0 ? `+${n}` : String(n);
 }
 
-function destructionTone(pct: number): string {
-  return pct >= 100 ? "bg-gold-400" : pct >= 50 ? "bg-tide-400" : "bg-ember-400/80";
-}
-
 function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "defense" }) {
   const pct = Math.max(0, Math.min(100, toNum(battle.destructionPercentage) ?? 0));
-  const diff = battle.opponent.townHallLevel - battle.townHallLevel;
-  const matchup = diff === 0 ? "Same Town Hall" : diff > 0 ? `${diff} Town Hall higher` : `${-diff} Town Hall lower`;
   const verb = side === "attack" ? "Attacked" : "Defended against";
 
   return (
@@ -40,13 +34,9 @@ function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "d
               <span className="sr-only">{verb} </span>
               {battle.opponent.name}
             </Link>
-            <span className="rounded-md bg-ink-800 px-1.5 py-0.5 font-mono text-[0.68rem] text-ink-300 ring-1 ring-ink-700">
-              TH{battle.opponent.townHallLevel}
-            </span>
           </div>
           <p className="mt-0.5 truncate font-mono text-xs text-ink-500">
-            {battle.opponent.tag} <span aria-hidden>/</span> TH{battle.townHallLevel} vs TH
-            {battle.opponent.townHallLevel}, {matchup}
+            {battle.opponent.tag}
           </p>
         </div>
         <span
@@ -60,17 +50,15 @@ function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "d
 
       <div className="ml-[3.75rem] mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-300">
         <StarMarks stars={battle.stars} />
-        <span className="flex items-center gap-2">
-          <span
-            role="img"
-            aria-label={`${pct.toFixed(0)} percent destruction`}
-            className="h-1.5 w-16 overflow-hidden rounded-full bg-ink-800"
-          >
-            <span className={`block h-full rounded-full ${destructionTone(pct)}`} style={{ width: `${pct}%` }} />
-          </span>
-          <span className="font-mono tabular-nums">{formatPercent(pct, 0)}</span>
+        <span className="font-mono tabular-nums">{formatPercent(pct, 0)}</span>
+        <span
+          className="flex items-center gap-1.5 font-mono tabular-nums"
+          title="Attack duration"
+          aria-label={`Duration ${formatDuration(battle.duration)}`}
+        >
+          <AssetIcon name="clock" size={14} />
+          {formatDuration(battle.duration)}
         </span>
-        <span className="font-mono tabular-nums">Time {formatDuration(battle.duration)}</span>
         {battle.shareCode && <CopyCode code={battle.shareCode} label="Copy army code" />}
       </div>
     </li>

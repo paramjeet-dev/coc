@@ -9,19 +9,19 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { palette } from "@/lib/palette";
-import { shortDay, type PerformanceDay } from "@/lib/legend";
+import { compactTrophies, shortDay, type PerformanceDay } from "@/lib/legend";
 
 type Metric = "trophies" | "net" | "attackAvg" | "defenseAvg";
 
 const TABS: Array<{ id: Metric; label: string; blurb: string }> = [
-  { id: "trophies", label: "Trophies", blurb: "Running net trophies across your recent Legend days." },
+  { id: "trophies", label: "Trophies", blurb: "Total trophies at the end of each Legend day." },
   { id: "net", label: "Net", blurb: "Trophies gained minus trophies lost, one bar per day." },
   { id: "attackAvg", label: "Attack avg", blurb: "Average trophies won per attack each day." },
   { id: "defenseAvg", label: "Defense avg", blurb: "Average trophies lost per defense each day." },
 ];
 
 const config = {
-  trophies: { label: "Net trophies", color: palette.gold },
+  trophies: { label: "Trophies", color: palette.gold },
   net: { label: "Net", color: palette.gold },
   attackAvg: { label: "Attack avg", color: palette.tide },
   defenseAvg: { label: "Defense avg", color: palette.ember },
@@ -39,7 +39,7 @@ function signed(n: number, digits = 0): string {
 
 function headline(metric: Metric, data: PerformanceDay[]): { label: string; value: string } {
   const last = data[data.length - 1];
-  if (metric === "trophies") return { label: "Net so far", value: last ? signed(last.trophies) : "n/a" };
+  if (metric === "trophies") return { label: "Latest total", value: last ? last.trophies.toLocaleString("en-US") : "n/a" };
   if (metric === "net") {
     const avg = average(data.map((d) => d.net));
     return { label: "Average per day", value: avg === null ? "n/a" : signed(avg, 1) };
@@ -111,7 +111,15 @@ export function LegendPerformanceChart({ data }: { data: PerformanceDay[] }) {
               </defs>
               {grid}
               {x}
-              <YAxis domain={["dataMin - 25", "dataMax + 25"]} width={48} {...axisProps} />
+              <YAxis
+                domain={[
+                  (min: number) => Math.floor((min - 40) / 50) * 50,
+                  (max: number) => Math.ceil((max + 40) / 50) * 50,
+                ]}
+                tickFormatter={compactTrophies}
+                width={48}
+                {...axisProps}
+              />
               {tooltip}
               <Area dataKey="trophies" type="monotone" stroke="var(--color-trophies)" strokeWidth={2.5} fill="url(#perf-fill)" isAnimationActive={false} />
             </AreaChart>

@@ -100,13 +100,27 @@ export function trimInactive(days: LegendSeriesDay[]): LegendSeriesDay[] {
   return first === -1 ? [] : days.slice(first);
 }
 
-/** Each row's `trophies` is that day's net change, so the tide is a running total. */
-export function runningTotal(days: LegendSeriesDay[]): Array<{ day: string; trophies: number }> {
-  let total = 0;
+/** Trophies a player starts a Legend season on. Only used when the live trophy count is unknown. */
+export const LEGEND_START_TROPHIES = 5000;
+
+/**
+ * Each series row's `trophies` is that day's net change. To get the real total at the end of
+ * each day, anchor the last day to the player's current trophies and walk backwards. Without an
+ * anchor, fall back to the season start plus the running net.
+ */
+export function endOfDayTotals(days: LegendSeriesDay[], currentTrophies: number | null): number[] {
+  const netSum = days.reduce((sum, d) => sum + d.trophies, 0);
+  const base = currentTrophies !== null ? currentTrophies - netSum : LEGEND_START_TROPHIES;
+  let total = base;
   return days.map((d) => {
     total += d.trophies;
-    return { day: dayKey(d.day), trophies: total };
+    return total;
   });
+}
+
+/** Compact trophy label for chart axes, for example 5100 becomes 5.1k. */
+export function compactTrophies(n: number): string {
+  return Math.abs(n) >= 1000 ? `${Number((n / 1000).toFixed(2))}k` : String(Math.round(n));
 }
 
 /**
@@ -126,7 +140,7 @@ export function compareSeasons(a: string, b: string): number {
 /** One Legend day with everything the performance chart and heatmap need. */
 export type PerformanceDay = {
   day: string;
-  /** Running net trophies since the first tracked day. */
+  /** Total trophies at the end of this day. */
   trophies: number;
   net: number;
   attackTrophies: number;
@@ -143,11 +157,12 @@ export function buildPerformance(
   days: LegendSeriesDay[],
   attackCounts: ReadonlyMap<string, number>,
   defenseCounts: ReadonlyMap<string, number>,
+  currentTrophies: number | null = null,
 ): PerformanceDay[] {
-  let total = 0;
-  return days.map((d) => {
+  const totals = endOfDayTotals(days, currentTrophies);
+  return days.map((d, i) => {
     const key = dayKey(d.day);
-    total += d.trophies;
+    const total = totals[i] ?? 0;
     const attacks = attackCounts.get(key) ?? null;
     const defenses = defenseCounts.get(key) ?? null;
     return {

@@ -15,7 +15,9 @@ import {
   getLegendDayCounts,
   getLegendHistory,
   getLegendSeries,
+  getPlayerRankings,
 } from "@/lib/api/endpoints";
+import { toNum } from "@/lib/api/types";
 import { normalizeTag } from "@/lib/api/tags";
 import { formatPercent } from "@/lib/format";
 import {
@@ -51,11 +53,14 @@ export default async function PlayerLegendsPage({
   const tag = normalizeTag(slug);
   const after = new Date(Date.now() - 31 * MS_DAY).toISOString();
 
-  const [series, history, battles] = await Promise.allSettled([
+  const [series, history, battles, rankings] = await Promise.allSettled([
     getLegendSeries(tag),
     getLegendHistory(tag),
     getBattlelogHistory(tag, after),
+    getPlayerRankings(tag),
   ]);
+  const liveTrophies =
+    rankings.status === "fulfilled" ? toNum(rankings.value.homeVillage?.trophies) : null;
 
   const allDays =
     series.status === "fulfilled"
@@ -100,7 +105,7 @@ export default async function PlayerLegendsPage({
     if (attacks) attackCounts.set(k, attacks);
     if (fromSummary?.defenses) defenseCounts.set(k, fromSummary.defenses);
   });
-  const performance = buildPerformance(days, attackCounts, defenseCounts);
+  const performance = buildPerformance(days, attackCounts, defenseCounts, liveTrophies ?? null);
   const net = days.map((d) => ({
     day: dayKey(d.day),
     attack: Math.abs(d.attackTrophies),
