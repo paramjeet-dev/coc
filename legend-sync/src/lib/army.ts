@@ -79,6 +79,7 @@ export const EQUIPMENT_NAMES: Record<number, string> = {
   56: "Stun Blaster",
   57: "Flame Blower",
   59: "Electro Fangs",
+  60: "Revenge Deck",
 };
 
 export const SPELL_NAMES: Record<number, string> = {
