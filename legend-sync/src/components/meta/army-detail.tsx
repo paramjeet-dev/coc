@@ -1,4 +1,5 @@
 import { CopyCode } from "@/components/battlelog/copy-code";
+import { ArmyBreakdown } from "@/components/army/army-breakdown";
 import { ArmyTimelineChart } from "./army-timeline-chart";
 import { formatInt, formatPercent } from "@/lib/format";
 import { formatDuration } from "@/lib/legend";
@@ -21,12 +22,13 @@ export function ArmyDetail({ family, timeline }: { family: ArmyFamily; timeline:
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate text-xl font-semibold tracking-tight">{describeFamily(family)}</h3>
-          <p className="mt-1 font-mono text-xs text-ink-500">{family.shareCode.slice(0, 28)}{family.shareCode.length > 28 ? "..." : ""}</p>
         </div>
         <CopyCode code={family.shareCode} label="Copy army code" />
       </div>
 
-      <dl className="mt-5 grid grid-cols-2 gap-x-5 gap-y-3 text-sm sm:grid-cols-4">
+      <ArmyBreakdown code={family.shareCode} className="mt-5" />
+
+      <dl className="mt-6 grid grid-cols-2 gap-x-5 gap-y-3 text-sm sm:grid-cols-4">
         {[
           ["Triple rate", formatPercent(tripleRate(family.starCounts))],
           ["Usage share", formatPercent(usageShare(family))],

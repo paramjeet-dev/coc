@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CopyCode } from "./copy-code";
+import { ArmyDetails, ArmyGlyphs } from "@/components/army/army-breakdown";
+import { decodeArmy } from "@/lib/army";
 import { formatPercent } from "@/lib/format";
 import { formatDuration } from "@/lib/legend";
 import type { ArmyUsage } from "@/lib/battlelog";
@@ -19,9 +21,13 @@ export function ArmyTable({ armies }: { armies: ArmyUsage[] }) {
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-baseline gap-2.5">
               <span className="font-mono text-xs tabular-nums text-ink-500">{String(i + 1).padStart(2, "0")}</span>
-              <span className="truncate font-mono text-sm" title={army.shareCode}>
-                {shorten(army.shareCode)}
-              </span>
+              {decodeArmy(army.shareCode) ? (
+                <ArmyGlyphs code={army.shareCode} className="min-w-0" />
+              ) : (
+                <span className="truncate font-mono text-sm" title={army.shareCode}>
+                  {shorten(army.shareCode)}
+                </span>
+              )}
             </div>
             <CopyCode code={army.shareCode} />
           </div>
@@ -38,9 +44,10 @@ export function ArmyTable({ armies }: { armies: ArmyUsage[] }) {
               </div>
             ))}
           </dl>
+          <ArmyDetails code={army.shareCode} preview={false} className="mt-2.5" />
           <Link
             href={`/meta?army=${encodeURIComponent(army.shareCode)}`}
-            className="mt-2 inline-block text-xs text-tide-400 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-gold-400"
+            className="mt-2.5 inline-block text-xs text-tide-400 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-gold-400"
           >
             See how the field performs with it
           </Link>

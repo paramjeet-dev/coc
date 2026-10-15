@@ -1,3 +1,4 @@
+import { autoArmyName, decodeArmy } from "./army";
 import { toNum, type ArmyFamily, type ArmyTimelineDay, type Cohort, type StarCounts } from "./api/types";
 
 export const COHORTS: Array<{ value: Cohort; label: string; hint: string }> = [
@@ -40,7 +41,10 @@ export function usageShare(f: ArmyFamily): number | null {
 }
 
 export function describeFamily(f: ArmyFamily): string {
-  return f.name?.trim() || `Army ${f.shareCode.slice(0, 8)}`;
+  const named = f.name?.trim();
+  if (named) return named;
+  const decoded = decodeArmy(f.shareCode);
+  return decoded ? autoArmyName(decoded) : `Army ${f.shareCode.slice(0, 8)}`;
 }
 
 /** Daily triple rate and usage, oldest first, ready for charting. */

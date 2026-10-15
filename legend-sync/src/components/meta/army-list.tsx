@@ -3,6 +3,7 @@ import { formatInt, formatPercent } from "@/lib/format";
 import { toNum, type ArmyFamily, type Cohort } from "@/lib/api/types";
 import { describeFamily, tripleRate, usageShare, zeroStarRate, type SortKey } from "@/lib/meta";
 import { formatDuration } from "@/lib/legend";
+import { ArmyGlyphs } from "@/components/army/army-breakdown";
 
 type Props = { armies: ArmyFamily[]; cohort: Cohort; sort: SortKey; selected?: string };
 
@@ -38,8 +39,9 @@ export function ArmyList({ armies, cohort, sort, selected }: Props) {
                   <span className="ml-1 text-xs font-normal text-ink-500">triples</span>
                 </span>
               </div>
+              <ArmyGlyphs code={a.shareCode} className="mt-2.5" />
               <div
-                className="mt-2 h-1 rounded-full bg-ink-700"
+                className="mt-2.5 h-1 rounded-full bg-ink-700"
                 role="img"
                 aria-label={`${formatPercent(share)} of Legend attacks`}
               >

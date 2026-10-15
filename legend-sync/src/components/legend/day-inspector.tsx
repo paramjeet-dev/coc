@@ -5,6 +5,7 @@ import { formatDuration, parseBattleTime } from "@/lib/legend";
 import { formatPercent } from "@/lib/format";
 import { toNum, type LegendBattle, type LegendDayBattlelog } from "@/lib/api/types";
 import { AssetIcon } from "@/components/ui/asset-icon";
+import { ArmyDetails } from "@/components/army/army-breakdown";
 import { StarMarks } from "./star-marks";
 
 function clock(time: string): string {
@@ -61,6 +62,7 @@ function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "d
         </span>
         {battle.shareCode && <CopyCode code={battle.shareCode} label="Copy army code" />}
       </div>
+      {battle.shareCode && <ArmyDetails code={battle.shareCode} className="ml-[3.75rem] mt-3" />}
     </li>
   );
 }
