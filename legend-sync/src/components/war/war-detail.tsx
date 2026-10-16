@@ -6,6 +6,7 @@ import { tagToSlug } from "@/lib/api/tags";
 import { toNum, type WarSide } from "@/lib/api/types";
 import { AssetIcon } from "@/components/ui/asset-icon";
 import { townHallIcon } from "@/lib/assets";
+import { formatDuration } from "@/lib/legend";
 import { RESULT_STYLE } from "./result-style";
 import { WAR_KINDS, attacksPerMember, memberLines, type OurWar } from "@/lib/war";
 
@@ -36,7 +37,17 @@ function TownHallBadge({ level }: { level: number | null }) {
   );
 }
 
+function MiniTownHall({ level }: { level: number | null }) {
+  const src = townHallIcon(level);
+  if (!src || level === null) return <span className="font-mono text-ink-500">TH?</span>;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={`Town Hall ${level}`} title={`Town Hall ${level}`} width={22} height={22} loading="lazy" className="size-[22px] shrink-0 object-contain" />
+  );
+}
+
 export function WarDetail({ item }: { item: OurWar }) {
+  const defenders = new Map((item.them.members ?? []).map((m) => [m.tag, m]));
   const per = attacksPerMember(item.war, item.kind);
   const lines = memberLines(item.us, per);
   const missedTotal = lines.reduce((s, l) => s + l.missed, 0);
@@ -65,7 +76,7 @@ export function WarDetail({ item }: { item: OurWar }) {
         <p className="mt-6 text-sm text-ink-300">Member attacks were not stored for this war.</p>
       ) : (
         <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[34rem] text-left text-sm">
+          <table className="w-full text-left text-sm" style={{ minWidth: `${22 + per * 15}rem` }}>
             <caption className="sr-only">Attacks by member</caption>
             <thead className="text-ink-500">
               <tr className="border-b border-ink-800">
@@ -105,10 +116,27 @@ export function WarDetail({ item }: { item: OurWar }) {
                     return (
                       <td key={i} className="py-2 pr-3">
                         {a ? (
-                          <span className="flex items-center gap-2">
-                            <StarMarks stars={toNum(a.stars) ?? 0} />
-                            <span className="text-xs text-ink-300">{String(toNum(a.destructionPercentage) ?? 0)}%</span>
-                          </span>
+                          <div className="min-w-[13rem]" title={toNum(a.order) !== null ? `Attack ${toNum(a.order)} of the war` : undefined}>
+                            <span className="flex items-center gap-2">
+                              <StarMarks stars={toNum(a.stars) ?? 0} />
+                              <span className="text-xs text-ink-100">{String(toNum(a.destructionPercentage) ?? 0)}%</span>
+                              <span className="ml-auto flex items-center gap-1 text-xs text-ink-500" title="Attack duration">
+                                <AssetIcon name="clock" size={12} />
+                                {formatDuration(toNum(a.duration))}
+                              </span>
+                            </span>
+                            {(() => {
+                              const d = defenders.get(a.defenderTag);
+                              if (!d) return <span className="mt-1 block font-sans text-xs text-ink-500">{a.defenderTag}</span>;
+                              return (
+                                <span className="mt-1 flex items-center gap-1.5 font-sans text-xs text-ink-300">
+                                  <MiniTownHall level={toNum(d.townhallLevel)} />
+                                  <span className="font-mono text-ink-500">#{toNum(d.mapPosition) ?? "?"}</span>
+                                  <span className="truncate">{d.name}</span>
+                                </span>
+                              );
+                            })()}
+                          </div>
                         ) : (
                           <span className="text-xs font-sans text-ember-400">missed</span>
                         )}

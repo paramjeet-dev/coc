@@ -8,7 +8,9 @@ import { Panel } from "@/components/ui/panel";
 import { StatGrid } from "@/components/ui/stat";
 import { getArmyFamily, getArmyTimeline, searchArmies } from "@/lib/api/endpoints";
 import { formatInt, formatPercent } from "@/lib/format";
-import { COHORTS, parseCohort, parseSort, tripleRate, totalAttacks } from "@/lib/meta";
+import { armyKey } from "@/lib/army";
+import { COHORTS, mergeFamilies, mergeTimelines, parseCohort, parseSort, tripleRate, totalAttacks } from "@/lib/meta";
+import type { ArmyFamily, ArmyTimeline } from "@/lib/api/types";
 
 export const metadata: Metadata = { title: "Meta armies" };
 
@@ -23,21 +25,28 @@ export default async function MetaPage({
 
   const cohortLabel = COHORTS.find((c) => c.value === cohort)?.label ?? cohort;
 
-  const search = await searchArmies({ cohort, sort, minimumAttacks: 20, limit: 10 }).then(
-    (r) => ({ ok: true as const, armies: r.items }),
+  const search = await searchArmies({ cohort, sort, minimumAttacks: 20, limit: 40 }).then(
+    (r) => ({ ok: true as const, armies: mergeFamilies(r.items, sort, 10) }),
     () => ({ ok: false as const, armies: [] }),
   );
 
   const selectedCode = q.army ?? search.armies[0]?.shareCode;
 
-  const [detail, timeline] = selectedCode
-    ? await Promise.allSettled([
-      getArmyFamily(selectedCode, cohort),
-      getArmyTimeline(selectedCode, cohort),
-    ])
-    : [null, null];
-  const family = detail && detail.status === "fulfilled" ? detail.value : null;
-  const days = timeline && timeline.status === "fulfilled" ? timeline.value : null;
+  // A selected code can be any variant of a listed army, so match on the canonical key.
+  const selectedKey = selectedCode ? armyKey(selectedCode) : null;
+  const group = search.armies.find((a) => armyKey(a.shareCode) === selectedKey) ?? null;
+  const variantCodes = group?.variantCodes ?? (selectedCode ? [selectedCode] : []);
+
+  const [detail, timelines] = selectedCode
+    ? await Promise.all([
+        group ? Promise.resolve<ArmyFamily>(group) : getArmyFamily(selectedCode, cohort).catch(() => null),
+        Promise.allSettled(variantCodes.slice(0, 6).map((code) => getArmyTimeline(code, cohort))),
+      ])
+    : [null, []];
+  const family = detail ?? null;
+  const days = mergeTimelines(
+    timelines.flatMap((t) => (t.status === "fulfilled" ? [t.value as ArmyTimeline] : [])),
+  );
 
   const totalSeen = search.armies[0]?.totalLegendAttacks ?? 0;
   const topTriple = search.armies.reduce((best, a) => Math.max(best, tripleRate(a.starCounts) ?? 0), 0);

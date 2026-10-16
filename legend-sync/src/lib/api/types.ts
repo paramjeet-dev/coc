@@ -240,6 +240,8 @@ export type ArmyFamily = {
   averageDuration: Num | null;
   averageDestruction: Num | null;
   totalLegendAttacks: number;
+  /** Share codes of the close variants merged into this row, most used first. Set client side. */
+  variantCodes?: string[];
 };
 
 export type ArmySearchResult = { cohort: Cohort; items: ArmyFamily[] };

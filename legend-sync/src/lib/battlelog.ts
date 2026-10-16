@@ -1,3 +1,4 @@
+import { armyKey } from "./army";
 import { toNum, type BattleHistoryItem } from "./api/types";
 import { parseBattleTime } from "./legend";
 
@@ -85,18 +86,27 @@ export type ArmyUsage = {
   averageDestruction: number;
   averageDuration: number;
   lastUsed: string;
+  /** Every distinct code seen for this army, most used first. */
+  variantCodes: string[];
 };
 
-/** Groups attacks by army share code. Rows without a code are skipped. */
+/** Groups attacks by canonical army, so codes that only differ in layout count as one army. Rows without a code are skipped. */
 export function armyUsage(items: BattleHistoryItem[]): ArmyUsage[] {
   const map = new Map<string, BattleHistoryItem[]>();
   for (const item of items) {
     if (!item.shareCode) continue;
-    const list = map.get(item.shareCode);
+    const key = armyKey(item.shareCode);
+    const list = map.get(key);
     if (list) list.push(item);
-    else map.set(item.shareCode, [item]);
+    else map.set(key, [item]);
   }
-  return Array.from(map, ([shareCode, rows]) => {
+  return Array.from(map.values(), (rows) => {
+    const perCode = new Map<string, number>();
+    for (const r of rows) {
+      if (r.shareCode) perCode.set(r.shareCode, (perCode.get(r.shareCode) ?? 0) + 1);
+    }
+    const variantCodes = [...perCode].sort((a, b) => b[1] - a[1]).map(([code]) => code);
+    const shareCode = variantCodes[0]!;
     const latest = rows.reduce((a, b) =>
       parseBattleTime(a.battleTime).getTime() >= parseBattleTime(b.battleTime).getTime() ? a : b,
     );
@@ -108,6 +118,7 @@ export function armyUsage(items: BattleHistoryItem[]): ArmyUsage[] {
       averageDestruction: rows.reduce((s, r) => s + (toNum(r.destructionPercentage) ?? 0), 0) / rows.length,
       averageDuration: rows.reduce((s, r) => s + r.duration, 0) / rows.length,
       lastUsed: latest.battleTime,
+      variantCodes,
     };
   }).sort((a, b) => b.uses - a.uses || b.triples - a.triples);
 }

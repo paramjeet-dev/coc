@@ -292,3 +292,32 @@ export function autoArmyName(army: DecodedArmy): string {
   const top = [...source].sort((a, b) => b.count - a.count).slice(0, 2);
   return top.length > 0 ? top.map((t) => t.name).join(" + ") : "Army";
 }
+
+/**
+ * Canonical identity of an army. Two codes with the same key are the same army with small
+ * differences in layout: entry order, equipment order, and where units sit (a siege machine in
+ * the Clan Castle versus the army camp, or Clan Castle troops versus the same troops in the camp).
+ * Heroes, pets and hero equipment still count, so a different loadout is a different army.
+ */
+export function armyKey(code: string): string {
+  const army = decodeArmy(code);
+  if (!army) return code;
+
+  const heroes = [...army.heroes]
+    .sort((a, b) => a.id - b.id)
+    .map((h) => `${h.id}p${h.pet?.id ?? ""}e${h.equipment.map((e) => e.id).sort((a, b) => a - b).join("_")}`)
+    .join("-");
+
+  const merge = (...lists: ArmyUnit[][]): string => {
+    const totals = new Map<number, number>();
+    for (const list of lists) {
+      for (const unit of list) totals.set(unit.id, (totals.get(unit.id) ?? 0) + unit.count);
+    }
+    return [...totals]
+      .sort((a, b) => a[0] - b[0])
+      .map(([id, count]) => `${id}x${count}`)
+      .join("-");
+  };
+
+  return `h${heroes}u${merge(army.troops, army.castleTroops)}s${merge(army.spells, army.castleSpells)}`;
+}

@@ -25,6 +25,11 @@ export function ArmyDetail({ family, timeline }: { family: ArmyFamily; timeline:
         </div>
         <CopyCode code={family.shareCode} label="Copy army code" />
       </div>
+      {(family.variantCodes?.length ?? 1) > 1 && (
+        <p className="mt-2 text-xs text-ink-500">
+          Combines {family.variantCodes?.length} close variants. Entry order, and siege or troops moved between the Clan Castle and the army camp, are treated as the same army.
+        </p>
+      )}
 
       <ArmyBreakdown code={family.shareCode} className="mt-5" />
 

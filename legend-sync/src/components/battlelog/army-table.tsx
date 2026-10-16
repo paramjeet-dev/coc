@@ -44,6 +44,11 @@ export function ArmyTable({ armies }: { armies: ArmyUsage[] }) {
               </div>
             ))}
           </dl>
+          {army.variantCodes.length > 1 && (
+            <p className="mt-2 text-xs text-ink-500">
+              Combines {army.variantCodes.length} close variants of this army.
+            </p>
+          )}
           <ArmyDetails code={army.shareCode} preview={false} className="mt-2.5" />
           <Link
             href={`/meta?army=${encodeURIComponent(army.shareCode)}`}

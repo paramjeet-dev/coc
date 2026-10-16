@@ -4,6 +4,7 @@ import { toNum, type ArmyFamily, type Cohort } from "@/lib/api/types";
 import { describeFamily, tripleRate, usageShare, zeroStarRate, type SortKey } from "@/lib/meta";
 import { formatDuration } from "@/lib/legend";
 import { ArmyGlyphs } from "@/components/army/army-breakdown";
+import { armyKey } from "@/lib/army";
 
 type Props = { armies: ArmyFamily[]; cohort: Cohort; sort: SortKey; selected?: string };
 
@@ -16,7 +17,8 @@ export function ArmyList({ armies, cohort, sort, selected }: Props) {
   return (
     <ol className="divide-y divide-ink-800">
       {armies.map((a, i) => {
-        const active = a.shareCode === selected;
+        const active = selected !== undefined && armyKey(a.shareCode) === armyKey(selected);
+        const extra = (a.variantCodes?.length ?? 1) - 1;
         const share = usageShare(a);
         const q = new URLSearchParams({ cohort, sort, army: a.shareCode });
         return (
@@ -33,6 +35,9 @@ export function ArmyList({ armies, cohort, sort, selected }: Props) {
                 <span className="flex min-w-0 items-baseline gap-2.5">
                   <span className="font-mono text-xs tabular-nums text-ink-500">{String(i + 1).padStart(2, "0")}</span>
                   <span className="truncate font-medium">{describeFamily(a)}</span>
+                  {extra > 0 && (
+                    <span className="shrink-0 font-mono text-[0.68rem] text-ink-500">+{extra} {extra === 1 ? "variant" : "variants"}</span>
+                  )}
                 </span>
                 <span className="shrink-0 font-mono text-lg font-semibold tabular-nums text-gold-300">
                   {formatPercent(tripleRate(a.starCounts), 0)}
