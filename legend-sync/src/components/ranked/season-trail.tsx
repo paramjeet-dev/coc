@@ -3,6 +3,7 @@ import { LinkPending } from "@/components/ui/link-pending";
 import { LeagueBadge } from "@/components/ui/league-badge";
 import { formatInt } from "@/lib/format";
 import type { RankedSeasonRecord } from "@/lib/api/types";
+import { seasonLabel } from "@/lib/ranked";
 
 type Props = { seasons: RankedSeasonRecord[]; selected: string; basePath: string };
 
@@ -25,7 +26,7 @@ export function SeasonTrail({ seasons, selected, basePath }: Props) {
               >
                 <LeagueBadge name={s.league.name} size={32} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{s.seasonId}</span>
+                  <span className="block truncate text-sm font-medium">{seasonLabel(s.seasonId)}</span>
                 </span>
                 <span className="text-right">
                   <span className="block font-mono text-sm tabular-nums text-gold-300">{formatInt(s.leagueTrophies)}</span>

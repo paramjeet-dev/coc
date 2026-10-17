@@ -8,7 +8,12 @@ import type {
 export function rankedSeasons(items: LeagueHistoryItem[]): RankedSeasonRecord[] {
   return items
     .filter((i): i is RankedSeasonRecord => i.mode === "ranked")
-    .sort((a, b) => b.seasonId.localeCompare(a.seasonId));
+    .sort((a, b) => b.seasonId.localeCompare(a.seasonId, "en", { numeric: true }));
+}
+
+/** Official season ids are plain numbers, so they get a readable label. ClashKing ids pass through. */
+export function seasonLabel(seasonId: string): string {
+  return /^\d+$/.test(seasonId) ? `Season ${seasonId}` : seasonId;
 }
 
 export function winRate(wins: number, losses: number): number | null {

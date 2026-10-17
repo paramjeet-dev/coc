@@ -187,10 +187,10 @@ export type RankedGroupMember = {
   name: string;
   townHallLevel: number | null;
   attackLosses: number;
-  attackStars: number;
+  attackStars: number | null;
   attackWins: number;
   defenseLosses: number;
-  defenseStars: number;
+  defenseStars: number | null;
   defenseWins: number;
   leagueTrophies: number;
   placement: number;

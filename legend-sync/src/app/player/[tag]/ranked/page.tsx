@@ -7,17 +7,14 @@ import { RankedTrophyChart } from "@/components/ranked/ranked-trophy-chart";
 import { SeasonTrail } from "@/components/ranked/season-trail";
 import { Standings } from "@/components/ranked/standings";
 import { Panel } from "@/components/ui/panel";
-import {
-  getLeagueHistory,
-  getLeagueTierStatistics,
-  getRankedBattlelog,
-  getRankedGroup,
-} from "@/lib/api/endpoints";
+import { getLeagueTierStatistics, getRankedBattlelog, getRankedGroup } from "@/lib/api/endpoints";
+import { getOfficialRankedGroup } from "@/lib/coc/ranked";
+import { loadRankedHistory } from "@/lib/ranked-source";
 import { normalizeTag } from "@/lib/api/tags";
 import { toNum } from "@/lib/api/types";
 import { LeagueBadge } from "@/components/ui/league-badge";
 import { formatInt, formatPercent } from "@/lib/format";
-import { rankedSeasons, starsPerBattle, tierStanding, winRate } from "@/lib/ranked";
+import { seasonLabel, starsPerBattle, tierStanding, winRate } from "@/lib/ranked";
 
 export const metadata: Metadata = { title: "Ranked seasons" };
 
@@ -35,10 +32,7 @@ export default async function PlayerRankedPage({
   const tag = normalizeTag(slug);
   const basePath = `/player/${slug.toUpperCase().replace(/^#/, "")}/ranked`;
 
-  const history = await getLeagueHistory(tag).then(
-    (r) => ({ ok: true as const, seasons: rankedSeasons(r.items) }),
-    () => ({ ok: false as const, seasons: [] }),
-  );
+  const history = await loadRankedHistory(tag);
 
   if (!history.ok) {
     return (
@@ -52,25 +46,26 @@ The stats service did not answer. Try again in a moment.
   const current = seasons.find((s) => s.seasonId === season) ?? seasons[0];
   if (!current) {
     return (
-      <EmptyState title="No ranked seasons stored for this player">
-Ranked seasons appear once the tracker has seen this player finish a tournament group.
+      <EmptyState title="No ranked seasons found for this player">
+Ranked seasons appear once this player has finished a tournament group.
 </EmptyState>
     );
   }
 
+  const fromOfficial = history.source === "official";
   const [log, group, tier] = await Promise.allSettled([
-    getRankedBattlelog(tag, current.seasonId),
-    getRankedGroup(current.seasonId, current.leagueGroupId),
-    getLeagueTierStatistics(current.seasonId, current.league.id),
+    fromOfficial ? Promise.reject(new Error("not stored")) : getRankedBattlelog(tag, current.seasonId),
+    fromOfficial ? getOfficialRankedGroup(current) : getRankedGroup(current.seasonId, current.leagueGroupId),
+    fromOfficial ? Promise.reject(new Error("not stored")) : getLeagueTierStatistics(current.seasonId, current.league.id),
   ]);
   const battlelog = log.status === "fulfilled" ? log.value : null;
-  const members = group.status === "fulfilled" ? group.value.members : [];
+  const members = group.status === "fulfilled" && group.value ? group.value.members : [];
   const tierStats = tier.status === "fulfilled" ? tier.value : null;
 
   const attackRate = winRate(current.attackWins, current.attackLosses);
   const defenseRate = winRate(current.defenseWins, current.defenseLosses);
   const standing = tierStats ? tierStanding(current.leagueTrophies, tierStats.trophyPercentiles) : null;
-  const chartData = [...seasons].reverse().map((s) => ({ season: s.seasonId, trophies: s.leagueTrophies }));
+  const chartData = [...seasons].reverse().map((s) => ({ season: seasonLabel(s.seasonId), trophies: s.leagueTrophies }));
 
   return (
     <div className="grid gap-5 lg:grid-cols-12">
@@ -79,7 +74,7 @@ Ranked seasons appear once the tracker has seen this player finish a tournament 
           <LeagueBadge name={current.league.name} size={72} />
           <div>
             <p className="font-mono text-[0.68rem] uppercase tracking-[0.18em] text-gold-400">Ranked season</p>
-            <h2 className="font-mono text-2xl font-semibold tracking-tight">{current.seasonId}</h2>
+            <h2 className="font-mono text-2xl font-semibold tracking-tight">{seasonLabel(current.seasonId)}</h2>
           </div>
           <div className="ml-auto text-right">
             <p className="font-mono text-4xl font-semibold tabular-nums text-gold-300">{formatInt(current.leagueTrophies)}</p>
@@ -147,12 +142,12 @@ Ranked seasons appear once the tracker has seen this player finish a tournament 
         {members.length > 0 ? (
           <Standings members={members} playerTag={tag} />
         ) : (
-          <p className="text-sm text-ink-300">The group for this season could not be loaded.</p>
+          <p className="text-sm text-ink-300">The group for this season is not available.</p>
         )}
       </Panel>
 
       <Panel
-        title={`Battles in ${current.seasonId}`}
+        title={`Battles in ${seasonLabel(current.seasonId)}`}
         description={
           battlelog
             ? `${battlelog.registeredAttacks} attacks and ${battlelog.registeredDefenses} defenses registered out of ${battlelog.maxBattles}.`
@@ -173,7 +168,7 @@ Ranked seasons appear once the tracker has seen this player finish a tournament 
             }}
           />
         ) : (
-          <p className="text-sm text-ink-300">Battle details for this season could not be loaded.</p>
+          <p className="text-sm text-ink-300">Battle details are not available for this season.</p>
         )}
       </Panel>
     </div>

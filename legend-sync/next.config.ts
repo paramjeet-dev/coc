@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
+  serverExternalPackages: ["clashofclans.js"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "api-assets.clashofclans.com" },
