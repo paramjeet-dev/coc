@@ -23,15 +23,15 @@ export function leagueTierIcon(name: string | null | undefined): string {
   const slug = name ? assetSlug(name) : "legend_league";
 
   const normalizedSlug = slug.replace(
-    /^legend_league_(i{1,3}|iv|v|vi{0,3}|ix|x)$/,
-    (_, roman: string) => {
+    /^legend_(?:league_)?(i{1,3}|[1-3])$/,
+    (_, tier: string) => {
       const romanToNumber: Record<string, string> = {
         i: "1",
         ii: "2",
-        iii: "3"
+        iii: "3",
       };
 
-      return `legend_league_${romanToNumber[roman] ?? roman}`;
+      return `legend_league_${romanToNumber[tier] ?? tier}`;
     },
   );
 
