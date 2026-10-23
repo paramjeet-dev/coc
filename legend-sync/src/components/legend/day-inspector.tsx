@@ -52,14 +52,16 @@ function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "d
       <div className="ml-[3.75rem] mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-300">
         <StarMarks stars={battle.stars} />
         <span className="font-mono tabular-nums">{formatPercent(pct, 0)}</span>
-        <span
-          className="flex items-center gap-1.5 font-mono tabular-nums"
-          title="Attack duration"
-          aria-label={`Duration ${formatDuration(battle.duration)}`}
-        >
-          <AssetIcon name="clock" size={14} />
-          {formatDuration(battle.duration)}
-        </span>
+        {battle.duration > 0 && (
+          <span
+            className="flex items-center gap-1.5 font-mono tabular-nums"
+            title="Attack duration"
+            aria-label={`Duration ${formatDuration(battle.duration)}`}
+          >
+            <AssetIcon name="clock" size={14} />
+            {formatDuration(battle.duration)}
+          </span>
+        )}
         {battle.shareCode && <CopyCode code={battle.shareCode} label="Copy army code" />}
       </div>
       {battle.shareCode && <ArmyDetails code={battle.shareCode} className="ml-[3.75rem] mt-3" />}
@@ -91,8 +93,8 @@ export function DayInspector({ log }: { log: LegendDayBattlelog }) {
           <p className="mt-3 text-sm text-ink-300">No attacks were recorded for this day.</p>
         ) : (
           <ul className="mt-2 divide-y divide-ink-800">
-            {log.attacks.map((battle) => (
-              <BattleRow key={battle.time} battle={battle} side="attack" />
+            {log.attacks.map((battle, i) => (
+              <BattleRow key={`${battle.time}-${i}`} battle={battle} side="attack" />
             ))}
           </ul>
         )}
@@ -112,8 +114,8 @@ export function DayInspector({ log }: { log: LegendDayBattlelog }) {
           <p className="mt-3 text-sm text-ink-300">No defenses were recorded for this day.</p>
         ) : (
           <ul className="mt-2 divide-y divide-ink-800">
-            {defenses.map((battle) => (
-              <BattleRow key={battle.time} battle={battle} side="defense" />
+            {defenses.map((battle, i) => (
+              <BattleRow key={`${battle.time}-${i}`} battle={battle} side="defense" />
             ))}
           </ul>
         )}

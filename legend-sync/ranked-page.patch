@@ -1,0 +1,410 @@
+diff --git a/legend-sync/.env.example b/legend-sync/.env.example
+index d2936d6..18da8e4 100644
+--- a/legend-sync/.env.example
++++ b/legend-sync/.env.example
+@@ -9,5 +9,3 @@ COC_PASSWORD=
+ # Keys with this name bound to a different IP are revoked on login, so two machines sharing a name would keep deleting each other's key.
+ COC_KEY_NAME=legend-sync
+ COC_KEY_COUNT=1
+-# auto: stats API first, official API as fallback. official: official only. clashking: stats API only.
+-RANKED_SOURCE=auto
+diff --git a/legend-sync/src/app/player/[tag]/ranked/page.tsx b/legend-sync/src/app/player/[tag]/ranked/page.tsx
+index 4c2a193..81e82e3 100644
+--- a/legend-sync/src/app/player/[tag]/ranked/page.tsx
++++ b/legend-sync/src/app/player/[tag]/ranked/page.tsx
+@@ -2,19 +2,17 @@ import { EmptyState } from "@/components/ui/empty-state";
+ import { HeroPanel } from "@/components/ui/hero-panel";
+ import type { Metadata } from "next";
+ import { DayInspector } from "@/components/legend/day-inspector";
+-import { PercentileLadder } from "@/components/ranked/percentile-ladder";
+ import { RankedTrophyChart } from "@/components/ranked/ranked-trophy-chart";
+ import { SeasonTrail } from "@/components/ranked/season-trail";
+ import { Standings } from "@/components/ranked/standings";
+ import { Panel } from "@/components/ui/panel";
+-import { getLeagueTierStatistics, getRankedBattlelog, getRankedGroup } from "@/lib/api/endpoints";
+-import { getOfficialRankedGroup } from "@/lib/coc/ranked";
+-import { loadRankedHistory } from "@/lib/ranked-source";
++import { isOfficialConfigured } from "@/lib/coc/client";
++import { battlelogFromGroup, getOfficialRankedGroup, getOfficialRankedSeasons } from "@/lib/coc/ranked";
+ import { normalizeTag } from "@/lib/api/tags";
+-import { toNum } from "@/lib/api/types";
+ import { LeagueBadge } from "@/components/ui/league-badge";
++import { AssetIcon } from "@/components/ui/asset-icon";
+ import { formatInt, formatPercent } from "@/lib/format";
+-import { seasonLabel, starsPerBattle, tierStanding, winRate } from "@/lib/ranked";
++import { rankedSeasons, seasonLabel, starsPerBattle, winRate } from "@/lib/ranked";
+ 
+ export const metadata: Metadata = { title: "Ranked seasons" };
+ 
+@@ -32,17 +30,27 @@ export default async function PlayerRankedPage({
+   const tag = normalizeTag(slug);
+   const basePath = `/player/${slug.toUpperCase().replace(/^#/, "")}/ranked`;
+ 
+-  const history = await loadRankedHistory(tag);
++  if (!isOfficialConfigured()) {
++    return (
++      <EmptyState tone="error" title="Official API is not configured">
++Set COC_EMAIL and COC_PASSWORD so ranked data can be loaded from the Clash of Clans API.
++</EmptyState>
++    );
++  }
++
++  const seasons = await getOfficialRankedSeasons(tag).then(
++    (list) => rankedSeasons(list),
++    () => null,
++  );
+ 
+-  if (!history.ok) {
++  if (!seasons) {
+     return (
+       <EmptyState tone="error" title="Ranked history could not be loaded">
+-The stats service did not answer. Try again in a moment.
++The Clash of Clans API did not answer. Try again in a moment.
+ </EmptyState>
+     );
+   }
+ 
+-  const seasons = history.seasons;
+   const current = seasons.find((s) => s.seasonId === season) ?? seasons[0];
+   if (!current) {
+     return (
+@@ -52,19 +60,15 @@ Ranked seasons appear once this player has finished a tournament group.
+     );
+   }
+ 
+-  const fromOfficial = history.source === "official";
+-  const [log, group, tier] = await Promise.allSettled([
+-    fromOfficial ? Promise.reject(new Error("not stored")) : getRankedBattlelog(tag, current.seasonId),
+-    fromOfficial ? getOfficialRankedGroup(current) : getRankedGroup(current.seasonId, current.leagueGroupId),
+-    fromOfficial ? Promise.reject(new Error("not stored")) : getLeagueTierStatistics(current.seasonId, current.league.id),
+-  ]);
+-  const battlelog = log.status === "fulfilled" ? log.value : null;
+-  const members = group.status === "fulfilled" && group.value ? group.value.members : [];
+-  const tierStats = tier.status === "fulfilled" ? tier.value : null;
++  const groupValue = await getOfficialRankedGroup(current).catch((error: unknown) => {
++    console.error("[ranked] league group failed", current.leagueGroupId, current.seasonId, error);
++    return null;
++  });
++  const battlelog = groupValue ? battlelogFromGroup(groupValue, current) : null;
++  const members = groupValue ? groupValue.members : [];
+ 
+   const attackRate = winRate(current.attackWins, current.attackLosses);
+   const defenseRate = winRate(current.defenseWins, current.defenseLosses);
+-  const standing = tierStats ? tierStanding(current.leagueTrophies, tierStats.trophyPercentiles) : null;
+   const chartData = [...seasons].reverse().map((s) => ({ season: seasonLabel(s.seasonId), trophies: s.leagueTrophies }));
+ 
+   return (
+@@ -77,7 +81,10 @@ Ranked seasons appear once this player has finished a tournament group.
+             <h2 className="font-mono text-2xl font-semibold tracking-tight">{seasonLabel(current.seasonId)}</h2>
+           </div>
+           <div className="ml-auto text-right">
+-            <p className="font-mono text-4xl font-semibold tabular-nums text-gold-300">{formatInt(current.leagueTrophies)}</p>
++            <p className="flex items-center justify-end gap-2 font-mono text-4xl font-semibold tabular-nums text-gold-300">
++              <AssetIcon name="trophy" size={32} label="Trophies" />
++              {formatInt(current.leagueTrophies)}
++            </p>
+             <p className="text-sm text-ink-300">
+               placed <span className="font-mono tabular-nums text-ink-100">#{current.placement}</span> in group
+             </p>
+@@ -102,34 +109,10 @@ Ranked seasons appear once this player has finished a tournament group.
+         </dl>
+       </HeroPanel>
+ 
+-      <Panel title="Seasons" className="lg:col-span-4 lg:row-span-2">
++      <Panel title="Seasons" className="lg:col-span-4">
+         <SeasonTrail seasons={seasons} selected={current.seasonId} basePath={basePath} />
+       </Panel>
+ 
+-      <Panel
+-        title="Against the tier"
+-        description={standing ?? "Tier percentiles are not available for this season."}
+-        className="lg:col-span-8"
+-      >
+-        {tierStats ? (
+-          <>
+-            <PercentileLadder trophies={current.leagueTrophies} percentiles={tierStats.trophyPercentiles} />
+-            <dl className="grid grid-cols-3 gap-4 border-t border-ink-800 pt-4 text-sm">
+-              {[
+-                ["Groups in tier", formatInt(tierStats.groupCount)],
+-                ["Players in tier", formatInt(tierStats.playerCount)],
+-                ["Avg gap to first", formatInt(toNum(tierStats.groupCompetitiveness.averageFirstPlaceGap))],
+-              ].map(([label, value]) => (
+-                <div key={label}>
+-                  <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
+-                  <dd className="font-mono text-base tabular-nums">{value}</dd>
+-                </div>
+-              ))}
+-            </dl>
+-          </>
+-        ) : null}
+-      </Panel>
+-
+       <Panel title="Season finishes" description="League trophies at the end of each ranked season." className="lg:col-span-5">
+         <RankedTrophyChart data={chartData} />
+       </Panel>
+diff --git a/legend-sync/src/components/legend/day-inspector.tsx b/legend-sync/src/components/legend/day-inspector.tsx
+index d6c3b5c..1004c33 100644
+--- a/legend-sync/src/components/legend/day-inspector.tsx
++++ b/legend-sync/src/components/legend/day-inspector.tsx
+@@ -52,14 +52,16 @@ function BattleRow({ battle, side }: { battle: LegendBattle; side: "attack" | "d
+       <div className="ml-[3.75rem] mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-ink-300">
+         <StarMarks stars={battle.stars} />
+         <span className="font-mono tabular-nums">{formatPercent(pct, 0)}</span>
+-        <span
+-          className="flex items-center gap-1.5 font-mono tabular-nums"
+-          title="Attack duration"
+-          aria-label={`Duration ${formatDuration(battle.duration)}`}
+-        >
+-          <AssetIcon name="clock" size={14} />
+-          {formatDuration(battle.duration)}
+-        </span>
++        {battle.duration > 0 && (
++          <span
++            className="flex items-center gap-1.5 font-mono tabular-nums"
++            title="Attack duration"
++            aria-label={`Duration ${formatDuration(battle.duration)}`}
++          >
++            <AssetIcon name="clock" size={14} />
++            {formatDuration(battle.duration)}
++          </span>
++        )}
+         {battle.shareCode && <CopyCode code={battle.shareCode} label="Copy army code" />}
+       </div>
+       {battle.shareCode && <ArmyDetails code={battle.shareCode} className="ml-[3.75rem] mt-3" />}
+@@ -91,8 +93,8 @@ export function DayInspector({ log }: { log: LegendDayBattlelog }) {
+           <p className="mt-3 text-sm text-ink-300">No attacks were recorded for this day.</p>
+         ) : (
+           <ul className="mt-2 divide-y divide-ink-800">
+-            {log.attacks.map((battle) => (
+-              <BattleRow key={battle.time} battle={battle} side="attack" />
++            {log.attacks.map((battle, i) => (
++              <BattleRow key={`${battle.time}-${i}`} battle={battle} side="attack" />
+             ))}
+           </ul>
+         )}
+@@ -112,8 +114,8 @@ export function DayInspector({ log }: { log: LegendDayBattlelog }) {
+           <p className="mt-3 text-sm text-ink-300">No defenses were recorded for this day.</p>
+         ) : (
+           <ul className="mt-2 divide-y divide-ink-800">
+-            {defenses.map((battle) => (
+-              <BattleRow key={battle.time} battle={battle} side="defense" />
++            {defenses.map((battle, i) => (
++              <BattleRow key={`${battle.time}-${i}`} battle={battle} side="defense" />
+             ))}
+           </ul>
+         )}
+diff --git a/legend-sync/src/components/ranked/season-trail.tsx b/legend-sync/src/components/ranked/season-trail.tsx
+index ef24dbe..20ed3b7 100644
+--- a/legend-sync/src/components/ranked/season-trail.tsx
++++ b/legend-sync/src/components/ranked/season-trail.tsx
+@@ -1,6 +1,7 @@
+ import Link from "next/link";
+ import { LinkPending } from "@/components/ui/link-pending";
+ import { LeagueBadge } from "@/components/ui/league-badge";
++import { AssetIcon } from "@/components/ui/asset-icon";
+ import { formatInt } from "@/lib/format";
+ import type { RankedSeasonRecord } from "@/lib/api/types";
+ import { seasonLabel } from "@/lib/ranked";
+@@ -29,7 +30,10 @@ export function SeasonTrail({ seasons, selected, basePath }: Props) {
+                   <span className="block truncate text-sm font-medium">{seasonLabel(s.seasonId)}</span>
+                 </span>
+                 <span className="text-right">
+-                  <span className="block font-mono text-sm tabular-nums text-gold-300">{formatInt(s.leagueTrophies)}</span>
++                  <span className="flex items-center justify-end gap-1 font-mono text-sm tabular-nums text-gold-300">
++                    <AssetIcon name="trophy" size={14} />
++                    {formatInt(s.leagueTrophies)}
++                  </span>
+                   <span className="block font-mono text-xs tabular-nums text-ink-500">#{s.placement}</span>
+                 </span>
+               <LinkPending /></Link>
+diff --git a/legend-sync/src/lib/api/types.ts b/legend-sync/src/lib/api/types.ts
+index 94e700d..16995ad 100644
+--- a/legend-sync/src/lib/api/types.ts
++++ b/legend-sync/src/lib/api/types.ts
+@@ -196,12 +196,25 @@ export type RankedGroupMember = {
+   placement: number;
+ };
+ 
++/** One entry of `attackLogs` or `defenseLogs` from the official /leaguegroup endpoint. */
++export type RankedGroupLogEntry = {
++  opponentTag: string;
++  opponentName: string;
++  stars: number;
++  destructionPercentage: number;
++  trophies: number;
++  time: string;
++};
++
+ export type RankedLeagueGroup = {
+   leagueGroupId: string;
+   seasonId: string;
+   league: { id: number; name: string };
+   maxBattles: number;
+   members: RankedGroupMember[];
++  /** Only filled by the official API. */
++  attackLogs?: RankedGroupLogEntry[];
++  defenseLogs?: RankedGroupLogEntry[];
+ };
+ 
+ export type LeagueTierStatistics = {
+diff --git a/legend-sync/src/lib/coc/ranked.ts b/legend-sync/src/lib/coc/ranked.ts
+index 9a2eeca..f6894bd 100644
+--- a/legend-sync/src/lib/coc/ranked.ts
++++ b/legend-sync/src/lib/coc/ranked.ts
+@@ -1,6 +1,13 @@
+ import "server-only";
+ import type { APILeagueGroupList } from "clashofclans.js";
+-import type { RankedGroupMember, RankedLeagueGroup, RankedSeasonRecord } from "../api/types";
++import type {
++  LegendBattle,
++  RankedBattlelog,
++  RankedGroupLogEntry,
++  RankedGroupMember,
++  RankedLeagueGroup,
++  RankedSeasonRecord,
++} from "../api/types";
+ import { getOfficialClient, memo } from "./client";
+ 
+ const MINUTE = 60_000;
+@@ -57,15 +64,23 @@ export async function getOfficialRankedSeasons(tag: string): Promise<RankedSeaso
+   });
+ }
+ 
+-type GroupMeta = Pick<RankedSeasonRecord, "seasonId" | "leagueGroupId" | "league" | "maxBattles">;
++type GroupMeta = Pick<RankedSeasonRecord, "seasonId" | "leagueGroupId" | "league" | "maxBattles" | "tag">;
+ 
+-/** Group standings from the official API. Placement is derived by sorting on trophies, since the API does not send it. */
++/**
++ * Group standings from the official API. Placement is derived by sorting on trophies, since the API does not send it.
++ *
++ * /leaguegroup/{leagueGroupTag}/{leagueSeasonId} also needs the playerTag query parameter. The attack and defense
++ * logs it returns belong to that player. clashofclans.js accepts the option on the REST method but not on the
++ * Client wrapper, so the REST method is called directly.
++ */
+ export async function getOfficialRankedGroup(season: GroupMeta): Promise<RankedLeagueGroup | null> {
+   if (!season.leagueGroupId) return null;
+-  return memo(`coc:group:${season.seasonId}:${season.leagueGroupId}`, 10 * MINUTE, async () => {
++  return memo(`coc:group:${season.seasonId}:${season.leagueGroupId}:${season.tag}`, 10 * MINUTE, async () => {
+     const client = await getOfficialClient();
+-    const group: APILeagueGroupList = await client.getLeagueGroup(season.leagueGroupId, season.seasonId);
+-    const members: RankedGroupMember[] = [...group.members]
++    const group: APILeagueGroupList = await client.rest
++      .getLeagueGroup(season.leagueGroupId, season.seasonId, { playerTag: season.tag })
++      .then((r) => r.body);
++    const members: RankedGroupMember[] = [...(group.members ?? [])]
+       .sort((a, b) => b.leagueTrophies - a.leagueTrophies)
+       .map((m, i) => ({
+         tag: m.playerTag,
+@@ -86,6 +101,65 @@ export async function getOfficialRankedGroup(season: GroupMeta): Promise<RankedL
+       league: season.league,
+       maxBattles: season.maxBattles,
+       members,
++      attackLogs: (group.attackLogs ?? []).map(toLogEntry),
++      defenseLogs: (group.defenseLogs ?? []).map(toLogEntry),
+     };
+   });
+ }
++
++type OfficialLog = APILeagueGroupList["attackLogs"][number];
++
++function toLogEntry(l: OfficialLog): RankedGroupLogEntry {
++  return {
++    opponentTag: l.opponentPlayerTag,
++    opponentName: l.opponentName,
++    stars: l.stars,
++    destructionPercentage: l.destructionPercentage,
++    trophies: l.trophies,
++    time: l.creationTime,
++  };
++}
++
++/** The official log has no Town Hall, duration or army code, so those fields are left empty. */
++function toBattle(l: RankedGroupLogEntry): LegendBattle {
++  return {
++    time: l.time,
++    townHallLevel: 0,
++    opponent: { tag: l.opponentTag, name: l.opponentName, townHallLevel: 0 },
++    stars: l.stars,
++    destructionPercentage: l.destructionPercentage,
++    duration: 0,
++    shareCode: null,
++    familyId: null,
++    trophies: l.trophies,
++  };
++}
++
++const newestFirst = (a: { time: string }, b: { time: string }) => b.time.localeCompare(a.time);
++
++/** Builds the battle log shown on the ranked page from the group's attack and defense logs. */
++export function battlelogFromGroup(
++  group: RankedLeagueGroup,
++  season: RankedSeasonRecord,
++): RankedBattlelog | null {
++  if (!group.attackLogs && !group.defenseLogs) return null;
++  const attacks = [...(group.attackLogs ?? [])].sort(newestFirst).map(toBattle);
++  const defenses = [...(group.defenseLogs ?? [])].sort(newestFirst).map(toBattle);
++  const sum = (list: LegendBattle[]) => list.reduce((n, b) => n + b.trophies, 0);
++  const attackTrophies = sum(attacks);
++  const defenseTrophies = sum(defenses);
++  return {
++    tag: season.tag,
++    seasonId: season.seasonId,
++    leagueGroupId: season.leagueGroupId,
++    league: season.league,
++    maxBattles: season.maxBattles,
++    registeredAttacks: attacks.length,
++    registeredDefenses: defenses.length,
++    attackTrophies,
++    defenseTrophies,
++    trophies: attackTrophies + defenseTrophies,
++    attacks,
++    defenses,
++  };
++}
+diff --git a/legend-sync/src/lib/ranked-source.ts b/legend-sync/src/lib/ranked-source.ts
+deleted file mode 100644
+index b60e4db..0000000
+--- a/legend-sync/src/lib/ranked-source.ts
++++ /dev/null
+@@ -1,41 +0,0 @@
+-import "server-only";
+-import { getLeagueHistory } from "./api/endpoints";
+-import type { RankedSeasonRecord } from "./api/types";
+-import { isOfficialConfigured } from "./coc/client";
+-import { getOfficialRankedSeasons } from "./coc/ranked";
+-import { rankedSeasons } from "./ranked";
+-
+-export type RankedSourceName = "clashking" | "official";
+-
+-export type RankedHistory =
+-  | { ok: true; source: RankedSourceName; seasons: RankedSeasonRecord[] }
+-  | { ok: false; seasons: [] };
+-
+-/**
+- * RANKED_SOURCE=auto (default): ClashKing first, official API when ClashKing has nothing or fails.
+- * RANKED_SOURCE=official: official API only.
+- * RANKED_SOURCE=clashking: ClashKing only.
+- */
+-const mode = () => (process.env.RANKED_SOURCE ?? "auto").toLowerCase();
+-
+-export async function loadRankedHistory(tag: string): Promise<RankedHistory> {
+-  const m = mode();
+-  const canUseOfficial = m !== "clashking" && isOfficialConfigured();
+-
+-  if (m !== "official") {
+-    const fromClashKing = await getLeagueHistory(tag).then(
+-      (r) => rankedSeasons(r.items),
+-      () => null,
+-    );
+-    if (fromClashKing && fromClashKing.length > 0) return { ok: true, source: "clashking", seasons: fromClashKing };
+-    if (!canUseOfficial) {
+-      return fromClashKing ? { ok: true, source: "clashking", seasons: [] } : { ok: false, seasons: [] };
+-    }
+-  }
+-
+-  if (!canUseOfficial) return { ok: false, seasons: [] };
+-  return getOfficialRankedSeasons(tag).then(
+-    (seasons) => ({ ok: true as const, source: "official" as const, seasons: rankedSeasons(seasons) }),
+-    () => ({ ok: false as const, seasons: [] as [] }),
+-  );
+-}

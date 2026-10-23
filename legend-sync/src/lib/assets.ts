@@ -69,7 +69,7 @@ export const UI_ICON_PATH: Record<UiIcon, string> = {
   dark_elixir: "resources/dark_elixir.webp",
   defense: "icons/Icon_HV_Shield.png",
   attack: "icons/Icon_HV_Attacks_No_Shield.png",
-  trophy: "ui/trophy.png",
+  trophy: "icons/Icon_HV_Trophy.png",
   clock: "ui/clock.png",
 };
 

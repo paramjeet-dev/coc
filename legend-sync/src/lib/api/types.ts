@@ -196,12 +196,25 @@ export type RankedGroupMember = {
   placement: number;
 };
 
+/** One entry of `attackLogs` or `defenseLogs` from the official /leaguegroup endpoint. */
+export type RankedGroupLogEntry = {
+  opponentTag: string;
+  opponentName: string;
+  stars: number;
+  destructionPercentage: number;
+  trophies: number;
+  time: string;
+};
+
 export type RankedLeagueGroup = {
   leagueGroupId: string;
   seasonId: string;
   league: { id: number; name: string };
   maxBattles: number;
   members: RankedGroupMember[];
+  /** Only filled by the official API. */
+  attackLogs?: RankedGroupLogEntry[];
+  defenseLogs?: RankedGroupLogEntry[];
 };
 
 export type LeagueTierStatistics = {

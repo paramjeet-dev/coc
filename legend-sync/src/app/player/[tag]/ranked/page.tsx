@@ -2,19 +2,17 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { HeroPanel } from "@/components/ui/hero-panel";
 import type { Metadata } from "next";
 import { DayInspector } from "@/components/legend/day-inspector";
-import { PercentileLadder } from "@/components/ranked/percentile-ladder";
 import { RankedTrophyChart } from "@/components/ranked/ranked-trophy-chart";
 import { SeasonTrail } from "@/components/ranked/season-trail";
 import { Standings } from "@/components/ranked/standings";
 import { Panel } from "@/components/ui/panel";
-import { getLeagueTierStatistics, getRankedBattlelog, getRankedGroup } from "@/lib/api/endpoints";
-import { getOfficialRankedGroup } from "@/lib/coc/ranked";
-import { loadRankedHistory } from "@/lib/ranked-source";
+import { isOfficialConfigured } from "@/lib/coc/client";
+import { battlelogFromGroup, getOfficialRankedGroup, getOfficialRankedSeasons } from "@/lib/coc/ranked";
 import { normalizeTag } from "@/lib/api/tags";
-import { toNum } from "@/lib/api/types";
 import { LeagueBadge } from "@/components/ui/league-badge";
+import { AssetIcon } from "@/components/ui/asset-icon";
 import { formatInt, formatPercent } from "@/lib/format";
-import { seasonLabel, starsPerBattle, tierStanding, winRate } from "@/lib/ranked";
+import { rankedSeasons, seasonLabel, starsPerBattle, winRate } from "@/lib/ranked";
 
 export const metadata: Metadata = { title: "Ranked seasons" };
 
@@ -32,17 +30,27 @@ export default async function PlayerRankedPage({
   const tag = normalizeTag(slug);
   const basePath = `/player/${slug.toUpperCase().replace(/^#/, "")}/ranked`;
 
-  const history = await loadRankedHistory(tag);
-
-  if (!history.ok) {
+  if (!isOfficialConfigured()) {
     return (
-      <EmptyState tone="error" title="Ranked history could not be loaded">
-The stats service did not answer. Try again in a moment.
+      <EmptyState tone="error" title="Official API is not configured">
+Set COC_EMAIL and COC_PASSWORD so ranked data can be loaded from the Clash of Clans API.
 </EmptyState>
     );
   }
 
-  const seasons = history.seasons;
+  const seasons = await getOfficialRankedSeasons(tag).then(
+    (list) => rankedSeasons(list),
+    () => null,
+  );
+
+  if (!seasons) {
+    return (
+      <EmptyState tone="error" title="Ranked history could not be loaded">
+The Clash of Clans API did not answer. Try again in a moment.
+</EmptyState>
+    );
+  }
+
   const current = seasons.find((s) => s.seasonId === season) ?? seasons[0];
   if (!current) {
     return (
@@ -52,19 +60,15 @@ Ranked seasons appear once this player has finished a tournament group.
     );
   }
 
-  const fromOfficial = history.source === "official";
-  const [log, group, tier] = await Promise.allSettled([
-    fromOfficial ? Promise.reject(new Error("not stored")) : getRankedBattlelog(tag, current.seasonId),
-    fromOfficial ? getOfficialRankedGroup(current) : getRankedGroup(current.seasonId, current.leagueGroupId),
-    fromOfficial ? Promise.reject(new Error("not stored")) : getLeagueTierStatistics(current.seasonId, current.league.id),
-  ]);
-  const battlelog = log.status === "fulfilled" ? log.value : null;
-  const members = group.status === "fulfilled" && group.value ? group.value.members : [];
-  const tierStats = tier.status === "fulfilled" ? tier.value : null;
+  const groupValue = await getOfficialRankedGroup(current).catch((error: unknown) => {
+    console.error("[ranked] league group failed", current.leagueGroupId, current.seasonId, error);
+    return null;
+  });
+  const battlelog = groupValue ? battlelogFromGroup(groupValue, current) : null;
+  const members = groupValue ? groupValue.members : [];
 
   const attackRate = winRate(current.attackWins, current.attackLosses);
   const defenseRate = winRate(current.defenseWins, current.defenseLosses);
-  const standing = tierStats ? tierStanding(current.leagueTrophies, tierStats.trophyPercentiles) : null;
   const chartData = [...seasons].reverse().map((s) => ({ season: seasonLabel(s.seasonId), trophies: s.leagueTrophies }));
 
   return (
@@ -77,7 +81,10 @@ Ranked seasons appear once this player has finished a tournament group.
             <h2 className="font-mono text-2xl font-semibold tracking-tight">{seasonLabel(current.seasonId)}</h2>
           </div>
           <div className="ml-auto text-right">
-            <p className="font-mono text-4xl font-semibold tabular-nums text-gold-300">{formatInt(current.leagueTrophies)}</p>
+            <p className="flex items-center justify-end gap-2 font-mono text-4xl font-semibold tabular-nums text-gold-300">
+              <AssetIcon name="trophy" size={32} label="Trophies" />
+              {formatInt(current.leagueTrophies)}
+            </p>
             <p className="text-sm text-ink-300">
               placed <span className="font-mono tabular-nums text-ink-100">#{current.placement}</span> in group
             </p>
@@ -102,32 +109,8 @@ Ranked seasons appear once this player has finished a tournament group.
         </dl>
       </HeroPanel>
 
-      <Panel title="Seasons" className="lg:col-span-4 lg:row-span-2">
+      <Panel title="Seasons" className="lg:col-span-4">
         <SeasonTrail seasons={seasons} selected={current.seasonId} basePath={basePath} />
-      </Panel>
-
-      <Panel
-        title="Against the tier"
-        description={standing ?? "Tier percentiles are not available for this season."}
-        className="lg:col-span-8"
-      >
-        {tierStats ? (
-          <>
-            <PercentileLadder trophies={current.leagueTrophies} percentiles={tierStats.trophyPercentiles} />
-            <dl className="grid grid-cols-3 gap-4 border-t border-ink-800 pt-4 text-sm">
-              {[
-                ["Groups in tier", formatInt(tierStats.groupCount)],
-                ["Players in tier", formatInt(tierStats.playerCount)],
-                ["Avg gap to first", formatInt(toNum(tierStats.groupCompetitiveness.averageFirstPlaceGap))],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <dt className="font-mono text-[0.68rem] uppercase tracking-[0.14em] text-ink-500">{label}</dt>
-                  <dd className="font-mono text-base tabular-nums">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </>
-        ) : null}
       </Panel>
 
       <Panel title="Season finishes" description="League trophies at the end of each ranked season." className="lg:col-span-5">
